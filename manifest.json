@@ -1,0 +1,10 @@
+{
+  "name": "Quick€",
+  "short_name": "Quick€",
+  "description": "Registo rápido de movimentos financeiros",
+  "start_url": "./quick.html",
+  "display": "standalone",
+  "background_color": "#0d0d12",
+  "theme_color": "#0d0d12",
+  "orientation": "portrait-primary"
+}
