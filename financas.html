@@ -2313,6 +2313,48 @@ function setCardBal(card) {
   showToast('✓ Saldo definido: ' + fmt(v));
 }
 
+function reconcileCard(card) {
+  var today = todayStr();
+  var snap = getCardSnap(card, today);
+  var snapDate = snap.date;
+  var allRecIn  = sumVal(S.rec.filter(function(r){return r.card===card&&r.date>snapDate&&r.date<=today;}));
+  var allDcOut  = sumVal(S.dc.filter(function(d){return d.card===card&&d.date>snapDate&&d.date<=today;}));
+  var allDfOut  = dfDebitsGtLte(card, snapDate, today);
+  var allTrfIn  = sumVal((S.trf||[]).filter(function(t){return t.to===card&&t.date>snapDate&&t.date<=today;}));
+  var allTrfOut = sumVal((S.trf||[]).filter(function(t){return t.from===card&&t.date>snapDate&&t.date<=today;}));
+  var appBal = snap.val + allRecIn - allDcOut - allDfOut + allTrfIn - allTrfOut;
+
+  var realStr = prompt(
+    'Reconciliar "' + card + '"\n\n' +
+    'Saldo calculado pela app: ' + fmt(appBal) + '\n\n' +
+    'Qual o saldo actual no teu banco? (€)',
+    appBal.toFixed(2)
+  );
+  if (realStr === null) return;
+  var real = parseFloat(realStr.replace(',', '.'));
+  if (isNaN(real)) return;
+
+  var diff = parseFloat((real - appBal).toFixed(2));
+  if (Math.abs(diff) < 0.01) { showToast('✓ Saldo já correcto — sem diferença'); return; }
+
+  snapshot();
+  if (diff > 0) {
+    S.rec.push({id: nid(), date: today, src: 'Ajuste', val: diff, card: card, notes: 'Reconciliação (' + fmt(appBal) + ' → ' + fmt(real) + ')', _src: 'recon'});
+  } else {
+    S.dc.push({id: nid(), date: today, name: 'Ajuste', cat: 'Ajuste', val: Math.abs(diff), card: card, notes: 'Reconciliação (' + fmt(appBal) + ' → ' + fmt(real) + ')', _src: 'recon'});
+  }
+  if (!S.cfg.balSnap) S.cfg.balSnap = {};
+  var arr = S.cfg.balSnap[card];
+  if (!Array.isArray(arr)) arr = arr ? [arr] : [];
+  var idx = arr.findIndex ? arr.findIndex(function(s){return s.date===today;}) : -1;
+  if (idx >= 0) { arr[idx] = {val: real, date: today}; } else { arr.push({val: real, date: today}); }
+  S.cfg.balSnap[card] = arr;
+  globalMonth = today.slice(0,7);
+  S.cfg.lastMonth = globalMonth;
+  saveState(); renderTab(CUR); updateGlobalNav();
+  showToast((diff > 0 ? '↑ +' : '↓ ') + fmt(Math.abs(diff)) + ' ajustado — saldo: ' + fmt(real));
+}
+
 function setFaturaManual(card, ym) {
   var cur = ((S.cfg.fatManual||{})[card]||{})[ym];
   var v = prompt('Valor real do cartão de crédito ' + card + ' em ' + monthLabel(ym) + ':\n(deixe vazio para usar o cálculo automático)', cur != null ? cur : '');
@@ -2430,7 +2472,10 @@ function renderCartoes() {
       return `<div class="kc" style="--_a:${col}">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.35rem;width:100%">
           <div class="klbl" style="margin:0">⇄ ${card}</div>
-          <button class="ic" onclick="setCardBal('${safeCard}')" title="Definir saldo atual" style="font-size:.7rem;width:22px;height:22px">⚙</button>
+          <div style="display:flex;gap:.3rem">
+            <button class="ic" onclick="reconcileCard('${safeCard}')" title="Reconciliar com banco" style="font-size:.65rem;width:22px;height:22px">⚖</button>
+            <button class="ic" onclick="setCardBal('${safeCard}')" title="Definir saldo atual" style="font-size:.7rem;width:22px;height:22px">⚙</button>
+          </div>
         </div>
         <div class="kval" style="color:${acumColT}">${fmt(acum)}</div>
         <div class="ksub" style="color:var(--mut);font-size:.62rem">conta de passagem</div>
@@ -2476,7 +2521,10 @@ function renderCartoes() {
     return `<div class="kc" style="--_a:${col}">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.35rem;width:100%">
         <div class="klbl" style="margin:0">${card}</div>
-        <button class="ic" onclick="setCardBal('${safeCard}')" title="Definir saldo atual" style="font-size:.7rem;width:22px;height:22px">⚙</button>
+        <div style="display:flex;gap:.3rem">
+          <button class="ic" onclick="reconcileCard('${safeCard}')" title="Reconciliar com banco" style="font-size:.65rem;width:22px;height:22px">⚖</button>
+          <button class="ic" onclick="setCardBal('${safeCard}')" title="Definir saldo atual" style="font-size:.7rem;width:22px;height:22px">⚙</button>
+        </div>
       </div>
       <div class="kval" style="color:${acumCol}">${fmt(acum)}</div>
       <div class="ksub" style="color:${netCol};font-weight:700">${net>=0?'+':''}${fmt(net)} este mês</div>
