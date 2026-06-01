@@ -2109,7 +2109,8 @@ function renderParcelas() {
       t += `<td style="text-align:center;font-size:.77rem"><span class="tgrn bold">${paid}</span><span class="tmut">/${ms.length}</span></td>`;
       t += `<td class="tred bold">${fmt(rem * p.vp)}</td>`;
       t += `<td style="white-space:nowrap"><div class="pb" style="width:48px;display:inline-block;vertical-align:middle"><div class="pf" style="width:${pct}%;background:${col}"></div></div><span style="font-size:.6rem;color:var(--mut);margin-left:.2rem">${pct}%</span></td>`;
-      t += `<td><div class="ac"><button class="ic e" onclick="openModal('parc',${p.id})" title="Editar">✏</button></div></td></tr>`;
+      var hasUnpaid = ms.filter(function(m){return !p.py[m];}).length > 0;
+      t += `<td><div class="ac"><button class="ic e" onclick="openModal('parc',${p.id})" title="Editar">✏</button>${hasUnpaid&&!isDone?`<button class="ic" onclick="quitarParc(${p.id})" title="Quitar antecipadamente" style="font-size:.65rem;background:rgba(245,166,35,.1);color:var(--ylw);border:1px solid rgba(245,166,35,.25)">Quitar</button>`:''}${!isDone?`<button class="ic d" onclick="delRec('par',${p.id})" title="Eliminar">🗑</button>`:''}</div></td></tr>`;
     }
     t += '</tbody></table></div>';
     return t;
@@ -2162,6 +2163,24 @@ function payParc(id, month, date) {
   renderParcelas();
   updateGlobalNav();
   showToast('✓ ' + p.name + ' → Despesas de ' + monthLabel(month));
+}
+
+function quitarParc(id) {
+  var p = S.par.find(function(x){return x.id===id;});
+  if (!p) return;
+  var ms = parcMonths(p);
+  var unpaid = ms.filter(function(m){ return !p.py[m]; });
+  if (!unpaid.length) { showToast('Todas as parcelas já estão pagas'); return; }
+  var total = unpaid.length * p.vp;
+  if (!confirm('Quitar "'+p.name+'"?\n\n'+unpaid.length+' parcela(s) em aberto → '+fmt(total)+'\n\nUma despesa de '+fmt(total)+' será criada no mês actual.')) return;
+  snapshot();
+  var today = todayStr();
+  unpaid.forEach(function(m){ p.py[m] = true; });
+  S.dc.push({id:nid(), date:today, name:p.name+' (quitação)', cat:p.cat||'Parcelas', val:total, card:p.card||'', notes:'Quitação antecipada — '+unpaid.length+'x'+fmt(p.vp), _src:'parc', _pid:id, _pm:'quit'});
+  globalMonth = today.slice(0,7);
+  S.cfg.lastMonth = globalMonth;
+  saveState(); renderParcelas(); updateGlobalNav();
+  showToast('✓ '+p.name+' quitado — '+fmt(total));
 }
 
 function unpayParc(id, month) {
