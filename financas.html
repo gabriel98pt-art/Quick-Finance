@@ -2448,16 +2448,18 @@ function renderCartoes() {
     var trfOut = sumVal(trf.filter(function(t){return t.from===card;}));
     var net = ent - sai + trfIn - trfOut;
 
-    // Saldo ao fim do mês visualizado
+    // Saldo: histórico usa fim do mês; mês actual/futuro usa hoje (evita subtrair despesas futuras)
+    var _today   = todayStr();
     var ymEnd    = ym + '-31';
-    var snap     = getCardSnap(card, ymEnd);
+    var balDate  = ymEnd < _today ? ymEnd : _today;
+    var snap     = getCardSnap(card, balDate);
     var snapVal  = snap.val;
     var snapDate = snap.date;
-    var allRecIn  = sumVal(S.rec.filter(function(r){return r.card===card&&r.date>snapDate&&r.date<=ymEnd;}));
-    var allDcOut  = sumVal(S.dc.filter(function(d){return d.card===card&&d.date>snapDate&&d.date<=ymEnd;}));
-    var allDfOut  = dfDebitsGtLte(card, snapDate, ymEnd);
-    var allTrfIn  = sumVal((S.trf||[]).filter(function(t){return t.to===card&&t.date>snapDate&&t.date<=ymEnd;}));
-    var allTrfOut = sumVal((S.trf||[]).filter(function(t){return t.from===card&&t.date>snapDate&&t.date<=ymEnd;}));
+    var allRecIn  = sumVal(S.rec.filter(function(r){return r.card===card&&r.date>snapDate&&r.date<=balDate;}));
+    var allDcOut  = sumVal(S.dc.filter(function(d){return d.card===card&&d.date>snapDate&&d.date<=balDate;}));
+    var allDfOut  = dfDebitsGtLte(card, snapDate, balDate);
+    var allTrfIn  = sumVal((S.trf||[]).filter(function(t){return t.to===card&&t.date>snapDate&&t.date<=balDate;}));
+    var allTrfOut = sumVal((S.trf||[]).filter(function(t){return t.from===card&&t.date>snapDate&&t.date<=balDate;}));
     var acum = snapVal + allRecIn - allDcOut - allDfOut + allTrfIn - allTrfOut;
 
     var col      = CARD_CSS[i % CARD_CSS.length];
