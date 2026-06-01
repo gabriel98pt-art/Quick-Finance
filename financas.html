@@ -388,8 +388,8 @@ code{background:var(--s2);padding:.1rem .35rem;border-radius:4px;font-size:.8em}
 
 <nav class="tabs">
   <button class="tb on" onclick="sw('dashboard',this)">📊 Dashboard</button>
-  <button class="tb" onclick="sw('receitas',this)">↗ Receitas</button>
-  <button class="tb" onclick="sw('despesas',this)">↘ Despesas</button>
+  <button class="tb" onclick="sw('receitas',this)">💰 Receitas</button>
+  <button class="tb" onclick="sw('despesas',this)">💸 Despesas</button>
   <button class="tb" onclick="sw('veiculo',this)">🚘 Veículo</button>
   <button class="tb" onclick="sw('parcelas',this)">💳 Parcelas</button>
   <button class="tb" onclick="sw('cal',this)">📅 Calendário</button>
@@ -2561,13 +2561,18 @@ function renderCartoes() {
 
 
   // Consolidated per-card grouped view
-  var TX_TYPE = {
-    rec: {lbl:'Receita',   cls:'gg'},
-    fix: {lbl:'Fixa',      cls:'gy'},
-    cor: {lbl:'Variável',  cls:'gr'},
-    fat: {lbl:'Cartão de Crédito', cls:'gb'},
-    trf: {lbl:'Transfer.', cls:'gb'}
+  var _TX_DEF = {
+    rec: {lbl:'Receita',            col:'#00d4a0'},
+    fix: {lbl:'Fixa',               col:'#f97316'},
+    cor: {lbl:'Variável',           col:'#ff5470'},
+    fat: {lbl:'Cartão de Crédito',  col:'#a78bfa'},
+    trf: {lbl:'Transfer.',          col:'#06b6d4'}
   };
+  var TX_TYPE = {};
+  Object.keys(_TX_DEF).forEach(function(k) {
+    var d = _TX_DEF[k];
+    TX_TYPE[k] = {lbl: d.lbl, col: (S.cfg.txTypeColors||{})[k] || d.col};
+  });
   var filteredCards = cv === 'all' ? methods : methods.filter(function(m){ return m === cv; });
 
   var ctHead = document.getElementById('ctHead');
@@ -2654,7 +2659,7 @@ function renderCartoes() {
     var runBal = openBal;
     cardTxs.forEach(function(tx){
       if (runBal !== null) runBal = fromCents(toCents(runBal) + tx.dir * toCents(tx.val));
-      var ti = TX_TYPE[tx.type] || {lbl:tx.type, cls:'gy'};
+      var ti = TX_TYPE[tx.type] || {lbl:tx.type, col:'#f5a623'};
       var valStr = (tx.dir > 0 ? '+' : '−') + fmt(tx.val);
       var valCol = tx.dir > 0 ? 'var(--grn)' : 'var(--red)';
       var balTd = runBal !== null
@@ -2663,7 +2668,7 @@ function renderCartoes() {
       html += '<tr>'
         + '<td>'+fmtDate(tx.date)+'</td>'
         + '<td>'+_esc(tx.desc||'')+'</td>'
-        + '<td><span class="bdg '+ti.cls+'">'+ti.lbl+'</span></td>'
+        + '<td>'+_hexToBadge(ti.col, ti.lbl)+'</td>'
         + '<td style="text-align:right;color:'+valCol+';font-weight:700">'+valStr+'</td>'
         + balTd
         + '</tr>';
@@ -3263,7 +3268,17 @@ function openSettings() {
   h += `<div class="ss"><h4>Categorias do Veículo</h4><div class="tl">${tagList(c.vcat||[],'vcat')}</div>${addRow('si_vcat','Nova categoria...')}</div>`;
   h += `</div></div>`;
 
-  // ── 2. Cartões ──
+  // ── 2. Tipos de Transação ──
+  var _txDef = {rec:{lbl:'Receita',col:'#00d4a0'},fix:{lbl:'Fixa',col:'#f97316'},cor:{lbl:'Variável',col:'#ff5470'},fat:{lbl:'Cartão de Crédito',col:'#a78bfa'},trf:{lbl:'Transfer.',col:'#06b6d4'}};
+  h += `<div class="sg"><div class="sgt">🏷 Tipos de Transação</div><div class="sgrid"><div class="ss"><h4>Cores por Tipo (aba Cartões)</h4>`;
+  Object.keys(_txDef).forEach(function(k) {
+    var d = _txDef[k];
+    var cur = (c.txTypeColors||{})[k] || d.col;
+    h += `<div class="srow"><span class="srow-label">${d.lbl}</span><span class="srow-val"><input type="color" id="stx_${k}" value="${cur}" style="width:28px;height:22px;border:none;background:none;cursor:pointer;padding:0;border-radius:4px"></span></div>`;
+  });
+  h += `</div></div></div>`;
+
+  // ── 3. Cartões ──
   h += `<div class="sg"><div class="sgt">💳 Cartões</div><div class="sgrid">`;
   h += `<div class="ss"><h4>Métodos de Pagamento</h4><div class="tl">${tagList(c.pay,'pay')}</div>${addRow('si_pay','Novo cartão...')}</div>`;
   h += `<div class="ss"><h4>Tipo de Cartão</h4>`;
@@ -3427,6 +3442,12 @@ function saveSet() {
     var eld = document.getElementById('scdd_' + safe);
     if (eld && eld.value) S.cfg.cardDueDay[x] = parseInt(eld.value)||0;
     else if (eld) delete S.cfg.cardDueDay[x];
+  });
+  // Cores dos tipos de transação
+  if (!S.cfg.txTypeColors) S.cfg.txTypeColors = {};
+  ['rec','fix','cor','fat','trf'].forEach(function(k) {
+    var el = document.getElementById('stx_'+k);
+    if (el) S.cfg.txTypeColors[k] = el.value;
   });
   // Cores
   if (!S.cfg.colors) S.cfg.colors = {};
