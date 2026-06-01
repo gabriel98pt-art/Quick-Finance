@@ -2256,6 +2256,32 @@ function cardBalAtDate(card, endDate) {
   return snap.val + recIn - dcOut + trfIn - trfOut;
 }
 
+// Sum of fixed expenses (df) for a card with effective date > afterDate and <= upToDate,
+// only counting entries that are paid (autoRenew or paidMonths marked).
+function dfDebitsGtLte(card, afterDate, upToDate) {
+  var total = 0;
+  var fromYm = afterDate.slice(0,7);
+  var toYm   = upToDate.slice(0,7);
+  S.df.forEach(function(d) {
+    if (d.card !== card) return;
+    var y = parseInt(fromYm.slice(0,4)), m = parseInt(fromYm.slice(5,7));
+    while (true) {
+      var cur = y + '-' + (m < 10 ? '0' : '') + m;
+      if (cur > toYm) break;
+      if (isActiveForYm(d, cur)) {
+        var lastDay = new Date(y, m, 0).getDate();
+        var day = Math.min(d.day || 1, lastDay);
+        var eff = cur + '-' + (day < 10 ? '0' : '') + day;
+        if (eff > afterDate && eff <= upToDate && (d.autoRenew || (d.paidMonths && d.paidMonths[cur]))) {
+          total += d.val;
+        }
+      }
+      if (++m > 12) { m = 1; y++; }
+    }
+  });
+  return total;
+}
+
 function getCardSnap(card, refDate) {
   var raw = (S.cfg.balSnap||{})[card];
   if (!raw) return {val: 0, date: '0000-01-01'};
@@ -2387,9 +2413,10 @@ function renderCartoes() {
     var snapDate = snap.date;
     var allRecIn  = sumVal(S.rec.filter(function(r){return r.card===card&&r.date>snapDate&&r.date<=ymEnd;}));
     var allDcOut  = sumVal(S.dc.filter(function(d){return d.card===card&&d.date>snapDate&&d.date<=ymEnd;}));
+    var allDfOut  = dfDebitsGtLte(card, snapDate, ymEnd);
     var allTrfIn  = sumVal((S.trf||[]).filter(function(t){return t.to===card&&t.date>snapDate&&t.date<=ymEnd;}));
     var allTrfOut = sumVal((S.trf||[]).filter(function(t){return t.from===card&&t.date>snapDate&&t.date<=ymEnd;}));
-    var acum = snapVal + allRecIn - allDcOut + allTrfIn - allTrfOut;
+    var acum = snapVal + allRecIn - allDcOut - allDfOut + allTrfIn - allTrfOut;
 
     var col      = CARD_CSS[i % CARD_CSS.length];
     var safeCard = card.replace(/'/g,"\\'");
@@ -2566,7 +2593,12 @@ function renderCartoes() {
       var dcB    = sumVal(S.dc.filter(function(d){  return d.card===card && d.date>=snap.date && d.date<ymStart; }));
       var trfInB = sumVal(trfAll.filter(function(t){ return t.to===card   && t.date>=snap.date && t.date<ymStart; }));
       var trfOB  = sumVal(trfAll.filter(function(t){ return t.from===card && t.date>=snap.date && t.date<ymStart; }));
-      openBal = snap.val + recB - dcB + trfInB - trfOB;
+      // prev month end as string upper bound for dfDebitsGtLte
+      var _py = parseInt(ym.slice(0,4)), _pm = parseInt(ym.slice(5,7)) - 1;
+      if (_pm < 1) { _pm = 12; _py--; }
+      var prevMonthEnd = _py + '-' + (_pm < 10 ? '0' : '') + _pm + '-31';
+      var dfB  = dfDebitsGtLte(card, snap.date, prevMonthEnd);
+      openBal = snap.val + recB - dcB - dfB + trfInB - trfOB;
     }
 
     // Group header row
