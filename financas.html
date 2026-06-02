@@ -716,10 +716,20 @@ var _fbDb = null;
         appId:             '1:687712813015:web:2070c4ee83a4d80040d592'
       });
     }
-    firebase.auth().signInWithEmailAndPassword('qf@orgfinanceira.local','QF_s1nc2026!').then(function() {
-      _fbDb = firebase.database();
-      _fbSync(false);
-    }).catch(function(e){ console.warn('[FB auth]', e); });
+    var _fbPw = localStorage.getItem('_fbPw');
+    if (!_fbPw) {
+      _fbPw = prompt('Senha de sincronização cloud (guardada apenas neste browser):');
+      if (_fbPw) localStorage.setItem('_fbPw', _fbPw);
+    }
+    if (_fbPw) {
+      firebase.auth().signInWithEmailAndPassword('qf@orgfinanceira.local', _fbPw).then(function() {
+        _fbDb = firebase.database();
+        _fbSync(false);
+      }).catch(function(e){
+        console.warn('[FB auth]', e);
+        localStorage.removeItem('_fbPw');
+      });
+    }
   } catch(e) { console.warn('[FB init]', e); }
 })();
 
@@ -2231,7 +2241,7 @@ function payParc(id, month, date) {
   if (!p) return;
   p.py[month] = true;
   var ms = parcMonths(p);
-  var idx = ms.indexOf(month) + 1;
+  var idx = Math.max(1, ms.indexOf(month) + 1);
   S.dc.push({id:nid(), date:date, name:p.name, cat:p.cat||'Parcelas', val:p.vp, card:p.card||'', notes:idx+'ª de '+p.num, _src:'parc', _pid:id, _pm:month});
   // Navigate to show this entry
   globalMonth = month;
@@ -3093,6 +3103,9 @@ function validateForm(type) {
       if (!fv('f_name')) return 'Nome obrigatório.';
       if (!(ff('f_val') > 0)) return 'Valor deve ser maior que zero.';
       { var _vafM=fv('f_afM'),_vafY=fv('f_afY'),_vatM=fv('f_atM'),_vatY=fv('f_atY');
+        var _mOk=function(m,y){var mi=parseInt(m),yi=parseInt(y);return mi>=1&&mi<=12&&yi>=2000&&yi<=2100;};
+        if((_vafM||_vafY)&&!_mOk(_vafM,_vafY)) return '"Ativo a partir de": mês/ano inválido.';
+        if((_vatM||_vatY)&&!_mOk(_vatM,_vatY)) return '"Encerrar em": mês/ano inválido.';
         var af=(_vafY&&_vafM)?_vafY+'-'+_vafM:null;
         var at=(_vatY&&_vatM)?_vatY+'-'+_vatM:null;
         if(af&&at&&at<af) return '"Encerrar em" deve ser igual ou posterior a "Ativo a partir de".'; }
@@ -3133,6 +3146,9 @@ function validateForm(type) {
       if (!fv('f_name')) return 'Nome obrigatório.';
       if (!(ff('f_val') > 0)) return 'Valor deve ser maior que zero.';
       { var _vafM2=fv('f_afM'),_vafY2=fv('f_afY'),_vatM2=fv('f_atM'),_vatY2=fv('f_atY');
+        var _mOk2=function(m,y){var mi=parseInt(m),yi=parseInt(y);return mi>=1&&mi<=12&&yi>=2000&&yi<=2100;};
+        if((_vafM2||_vafY2)&&!_mOk2(_vafM2,_vafY2)) return '"Ativo a partir de": mês/ano inválido.';
+        if((_vatM2||_vatY2)&&!_mOk2(_vatM2,_vatY2)) return '"Encerrar em": mês/ano inválido.';
         var af2=(_vafY2&&_vafM2)?_vafY2+'-'+_vafM2:null;
         var at2=(_vatY2&&_vatM2)?_vatY2+'-'+_vatM2:null;
         if(af2&&at2&&at2<af2) return '"Encerrar em" deve ser igual ou posterior a "Ativo a partir de".'; }
