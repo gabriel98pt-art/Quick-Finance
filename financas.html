@@ -1809,8 +1809,8 @@ function renderDashboard() {
       ]
     : [
         {l:'Receitas',  v:rec,  c:'var(--grn)', a:'var(--grn)'},
-        {l:'Despesas',  v:desp, c:'var(--red)', a:'var(--red)'},
-        {l:isCurrentYm&&_pendente>0?'Saldo parcial':'Saldo', v:sld, c:sld>=0?'var(--grn)':'var(--red)', a:sld>=0?'var(--grn)':'var(--red)', sub:isCurrentYm&&_pendente>0?'▼ '+fmt(_pendente)+' pendente':''}
+        {l:'Despesas',  v:desp, c:'var(--red)', a:'var(--red)', sub:isCurrentYm&&_pendente>0?'▼ '+fmt(_pendente)+' pendente':''},
+        {l:isCurrentYm&&_pendente>0?'Saldo parcial':'Saldo', v:sld, c:sld>=0?'var(--grn)':'var(--red)', a:sld>=0?'var(--grn)':'var(--red)'}
       ];
   _renderComp(ym);
   _updateAlertBadge();
