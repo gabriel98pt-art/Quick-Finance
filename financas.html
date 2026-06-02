@@ -160,7 +160,8 @@ tbody.anim tr:nth-child(n+6){animation-delay:.14s}
 .mnav{display:inline-flex;align-items:center;background:var(--s2);border:1px solid var(--brd);border-radius:10px;overflow:hidden}
 .mnav button{background:none;border:none;cursor:pointer;color:var(--txt);padding:.38rem .85rem;font-size:1.1rem;font-weight:700;transition:background var(--tr);line-height:1;font-family:inherit}
 .mnav button:hover{background:var(--brd)}
-.mnav-lbl{font-weight:700;font-size:.84rem;padding:.35rem .5rem;min-width:112px;text-align:center;white-space:nowrap;color:var(--txt)}
+.mnav-lbl{font-weight:700;font-size:.84rem;padding:.35rem .5rem;min-width:112px;text-align:center;white-space:nowrap;color:var(--txt);transition:color var(--tr)}
+.mnav-lbl.cur{color:var(--blu)}
 
 
 
@@ -497,6 +498,7 @@ tr.swipe-del{background:rgba(255,84,112,.28)!important;transition:background .15
     <span class="mnav-lbl" id="globalYearLbl" style="min-width:52px;text-align:center"></span>
     <button onclick="globalNavYear(1)">›</button>
   </div>
+  <button id="todayBtn" onclick="goToday()" style="display:none;background:var(--blu);color:#fff;border:none;border-radius:8px;padding:.3rem .7rem;font-size:.72rem;font-weight:700;cursor:pointer;transition:opacity var(--tr)" title="Ir para o mês actual">hoje</button>
 </div>
 
 <!-- iOS install banner -->
@@ -1766,9 +1768,19 @@ function renderActive() {
 function updateGlobalNav() {
   var el = document.getElementById('globalMonthLbl');
   var yrEl = document.getElementById('globalYearLbl');
-  if (el) el.textContent = monthLabelFull(globalMonth);
+  var todayBtn = document.getElementById('todayBtn');
+  var isCur = globalMonth === currentYm();
+  if (el) { el.textContent = monthLabelFull(globalMonth); el.classList.toggle('cur', isCur); }
   if (yrEl) yrEl.textContent = globalMonth.slice(0,4);
+  if (todayBtn) todayBtn.style.display = isCur ? 'none' : '';
   _updateAlertBadge();
+}
+function goToday() {
+  globalMonth = currentYm();
+  S.cfg.lastMonth = globalMonth;
+  _resetListFilters();
+  saveState();
+  renderActive();
 }
 
 // ================================================================
