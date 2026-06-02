@@ -1193,6 +1193,7 @@ function sumVal(arr) {
 
 // Parcela helpers
 function parcMonths(p) {
+  if (!p || !p.fd || !p.num) return [];
   var ms = [];
   var start = p.fd.slice(0, 7);
   for (var i = 0; i < p.num; i++) ms.push(addMonths(start, i));
@@ -1627,6 +1628,8 @@ function setBudShow(cat, checked) {
 
 function renderDashboard() {
   if (!globalMonth || globalMonth.length !== 7) globalMonth = (function(){ var d=new Date(); return d.getFullYear()+'-'+pad2(d.getMonth()+1); })();
+  miniAnnYear = parseInt(globalMonth.slice(0, 4));
+  renderBackupAlert();
 
   var ym = globalMonth;
   var ae = document.getElementById('dAlerts');
@@ -3006,7 +3009,7 @@ function buildForm(type, d) {
         <div class="ff"><label class="fl">Categoria</label><select class="fi" id="f_cat">${coP}</select></div>
         <div class="ff"><label class="fl">Cartão</label><select class="fi" id="f_card" onchange="onParcCardChange()">${poP}</select></div>
         <div class="ff full"><label class="fl" style="display:flex;align-items:center;gap:.55rem;cursor:pointer;font-weight:400">
-          <input type="checkbox" id="f_autoDebit" ${d&&d.autoDebit?'checked':(!d&&(S.cfg.cardType||{})[d&&d.card]==='credit'?'checked':'')} style="width:15px;height:15px;accent-color:var(--grn);flex-shrink:0">
+          <input type="checkbox" id="f_autoDebit" ${d&&d.autoDebit?'checked':''} style="width:15px;height:15px;accent-color:var(--grn);flex-shrink:0">
           <span style="font-weight:600">Débito automático</span>
           <span class="tmut" style="font-size:.72rem">(incluído na fatura sem precisar marcar)</span>
         </label></div>
@@ -6023,7 +6026,7 @@ function _qRender() {
   if(cc) cc.innerHTML=cats.map(function(c){
     var sel=_qCat===c;
     return '<div class="qchip'+(sel?' q'+(isE?'ce':'ci'):'')
-      +'" onclick="qPickCat(\''+c.replace(/\\/g,'\\\\').replace(/'/g,"\\'")+'\')">'+_esc(c)+'</div>';
+      +'" onclick="qPickCat('+JSON.stringify(c)+')">'+_esc(c)+'</div>';
   }).join('');
 
   var accs=S.cfg.pay||[];
@@ -6032,7 +6035,7 @@ function _qRender() {
   if(ac) ac.innerHTML=accs.map(function(a){
     var sel=_qAcc===a;
     return '<div class="qchip'+(sel?' qca':'')
-      +'" onclick="qPickAcc(\''+a.replace(/\\/g,'\\\\').replace(/'/g,"\\'")+'\')">'+_esc(a)+'</div>';
+      +'" onclick="qPickAcc('+JSON.stringify(a)+')">'+_esc(a)+'</div>';
   }).join('');
 }
 function qPickCat(c){ _qCat=c; _qRender(); }
