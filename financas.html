@@ -5461,19 +5461,19 @@ function resetColors() {
   showToast('✓ Cores repostas');
 }
 
-var _FS_STEPS = [11, 12, 13, 14, 15, 16];
-var _fsIdx = 1;
+var _FS_STEPS = [0.78, 0.88, 1.0, 1.1, 1.2, 1.3];
+var _fsIdx = 2;
 function adjustFont(dir) {
   _fsIdx = Math.max(0, Math.min(_FS_STEPS.length - 1, _fsIdx + dir));
   _applyFont();
   try { localStorage.setItem('_fsIdx', _fsIdx); } catch(e) {}
 }
 function _applyFont() {
-  document.documentElement.style.fontSize = _FS_STEPS[_fsIdx] + 'px';
+  document.body.style.zoom = _FS_STEPS[_fsIdx];
 }
 (function() {
   var s = localStorage.getItem('_fsIdx');
-  if (s !== null) _fsIdx = Math.max(0, Math.min(_FS_STEPS.length - 1, parseInt(s)||1));
+  if (s !== null) _fsIdx = Math.max(0, Math.min(_FS_STEPS.length - 1, parseInt(s)||2));
   _applyFont();
 })();
 
