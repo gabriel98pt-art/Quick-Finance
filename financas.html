@@ -1767,6 +1767,8 @@ function renderDashboard() {
 
   var rec = totRec(ym), cor = totCorrManual(ym), veh = totVeh(ym);
   var _today = todayStr(), _curYm = _today.slice(0,7), _todayDay = parseInt(_today.slice(8));
+  var _lastDayOfCurMonth = new Date(parseInt(_curYm.slice(0,4)), parseInt(_curYm.slice(5,7)), 0).getDate();
+  var _monthClosed = _todayDay >= _lastDayOfCurMonth;
   var isCurrentYm = (ym === _curYm);
   var fix, prc, fixPrev, prcPrev;
   if (isCurrentYm) {
@@ -1807,11 +1809,17 @@ function renderDashboard() {
         {l:'Despesas previstas',  v:desp, c:'var(--mut)', a:'var(--mut)'},
         {l:'Saldo previsto',      v:sld,  c:'var(--mut)', a:'var(--mut)'}
       ]
-    : [
-        {l:'Receitas',  v:rec,  c:'var(--grn)', a:'var(--grn)'},
-        {l:'Despesas',  v:desp, c:'var(--red)', a:'var(--red)', sub:isCurrentYm&&_pendente>0?'▼ '+fmt(_pendente)+' pendente':''},
-        {l:isCurrentYm&&_pendente>0?'Saldo parcial':'Saldo', v:sld, c:sld>=0?'var(--grn)':'var(--red)', a:sld>=0?'var(--grn)':'var(--red)'}
-      ];
+    : (function(){
+        var _showPartial = isCurrentYm && _pendente>0 && !_monthClosed;
+        var _poupPct = rec>0 ? Math.round(sld/rec*100) : 0;
+        var _poupCol = _poupPct>=20?'var(--grn)':_poupPct>=0?'var(--ylw)':'var(--red)';
+        return [
+          {l:'Receitas',  v:rec,  c:'var(--grn)', a:'var(--grn)'},
+          {l:'Despesas',  v:desp, c:'var(--red)', a:'var(--red)', sub:_showPartial?'▼ '+fmt(_pendente)+' pendente':''},
+          {l:_showPartial?'Saldo parcial':'Saldo', v:sld, c:sld>=0?'var(--grn)':'var(--red)', a:sld>=0?'var(--grn)':'var(--red)'},
+          {l:'Poupança', v:_poupPct+'%', c:_poupCol, a:_poupCol, raw:true}
+        ];
+      })();
   _renderComp(ym);
   _updateAlertBadge();
 
@@ -1821,7 +1829,7 @@ function renderDashboard() {
       ? `<div style="grid-column:1/-1;background:rgba(245,166,35,.1);border:1px solid rgba(245,166,35,.3);border-radius:8px;padding:.45rem .8rem;font-size:.72rem;color:var(--ylw);margin-bottom:.1rem">📅 Mês futuro — valores previstos com base em despesas fixas e parcelas agendadas</div>`
       : '';
     kEl.innerHTML = futureBanner + kpis.map(function(k) {
-      var valStr = fmt(k.v);
+      var valStr = k.raw ? k.v : fmt(k.v);
       var fs = valStr.length > 9 ? '1rem' : valStr.length > 7 ? '1.1rem' : '1.2rem';
       var subHtml = k.sub ? `<div style="font-size:.6rem;color:var(--ylw);margin-top:.15rem">${k.sub}</div>` : '';
       return `<div class="kc" style="--_a:${k.a};${isFutureYm?'opacity:.6':''}"><div class="klbl">${k.l}</div><div class="kval" style="color:${k.c};font-size:${fs}">${valStr}</div>${subHtml}</div>`;
@@ -1932,10 +1940,23 @@ function renderReceitas() {
       return `<div class="kc" style="--_a:${col}"><div class="klbl">${src}</div><div class="kval" style="color:${col}">${fmt(srcMn[src])}</div></div>`;
     }).join('');
 
+  // Vencimento: próxima data de receita >= hoje no mês actual, ou '—'
+  var _nextRecDate = '—';
+  if (globalMonth === todayStr().slice(0,7)) {
+    var _fut = mnRecs.filter(function(r){ return r.date >= todayStr(); }).sort(function(a,b){ return a.date>b.date?1:-1; });
+    if (_fut.length) _nextRecDate = fmtDateShort(_fut[0].date);
+  }
+  // Transferências: total de transferências internas recebidas no mês
+  var _trfIn = sumVal((S.trf||[]).filter(function(t){ return inMonth(t.date, globalMonth); }));
+  // Maior receita
+  var _maxRec = mnRecs.length ? Math.max.apply(null, mnRecs.map(function(r){return r.val;})) : 0;
+
   var kEl = document.getElementById('recKpis');
   if (kEl) kEl.innerHTML =
     `<div class="kc" style="--_a:var(--grn)"><div class="klbl">Total</div><div class="kval tgrn">${fmt(mnTot)}</div></div>` +
-    srcCards;
+    `<div class="kc" style="--_a:var(--blu)"><div class="klbl">Próximo</div><div class="kval tblu" style="font-size:1.1rem">${_nextRecDate}</div></div>` +
+    `<div class="kc" style="--_a:var(--pur)"><div class="klbl">Transferências</div><div class="kval tpur">${fmt(_trfIn)}</div></div>` +
+    `<div class="kc" style="--_a:var(--ylw)"><div class="klbl">Maior receita</div><div class="kval tylw">${fmt(_maxRec)}</div></div>`;
 
   // Card filter populate
   var cardFiltEl = document.getElementById('recCardFilt');
@@ -1984,8 +2005,8 @@ function renderDespesas() {
   if (dkEl) dkEl.innerHTML =
     `<div class="kc" style="--_a:var(--red)"><div class="klbl">Total</div><div class="kval tred">${fmt(_dTot)}</div></div>` +
     `<div class="kc" style="--_a:var(--ylw)"><div class="klbl">Fixas</div><div class="kval tylw">${fmt(_dFix)}</div></div>` +
-    `<div class="kc" style="--_a:var(--blu)"><div class="klbl">Variáveis</div><div class="kval tblu">${fmt(_dCorr)}</div></div>` +
-    `<div class="kc" style="--_a:${_parcCol}"><div class="klbl">Parcelas</div><div class="kval" style="color:${_parcCol}">${fmt(_dParc)}</div></div>`;
+    `<div class="kc" style="--_a:${_parcCol}"><div class="klbl">Parcelas</div><div class="kval" style="color:${_parcCol}">${fmt(_dParc)}</div></div>` +
+    `<div class="kc" style="--_a:var(--blu)"><div class="klbl">Variáveis</div><div class="kval tblu">${fmt(_dCorr)}</div></div>`;
 
   // Fixas
   var el = document.getElementById('dfBody');
@@ -2150,9 +2171,10 @@ function renderVeiculo() {
 
   var kEl = document.getElementById('vehKpis');
   if (kEl) kEl.innerHTML =
+    `<div class="kc" style="--_a:var(--pur)"><div class="klbl">Total</div><div class="kval tpur">${fmt(totAll)}</div></div>` +
     `<div class="kc" style="--_a:var(--ylw)"><div class="klbl">⚡ Carga</div><div class="kval tylw">${fmt(totCg)}</div></div>` +
-    `<div class="kc" style="--_a:var(--blu)"><div class="klbl">🚘 Despesas</div><div class="kval tblu">${fmt(totLp)}</div></div>` +
-    `<div class="kc" style="--_a:var(--pur)"><div class="klbl">Total</div><div class="kval tpur">${fmt(totAll)}</div></div>`;
+    `<div class="kc" style="--_a:var(--grn)"><div class="klbl">Fixas</div><div class="kval tgrn">${fmt(totFix)}</div></div>` +
+    `<div class="kc" style="--_a:var(--blu)"><div class="klbl">Variáveis</div><div class="kval tblu">${fmt(totLp)}</div></div>`;
 
   // Carga — filtered by month
   var cg = S.veh.cg.filter(function(d){return inMonth(d.date, ym);}).sort(function(a,b){return b.date>a.date?1:-1;});
@@ -2282,11 +2304,13 @@ function renderParcelas() {
     return s + rem * p.vp;
   }, 0);
 
+  var _parcAtivas = S.par.filter(function(p){ var ms=parcMonths(p); return ms.filter(function(m){return !p.py[m];}).length>0; }).length;
   var kEl = document.getElementById('parcKpis');
   if (kEl) kEl.innerHTML =
-    `<div class="kc" style="--_a:var(--ylw)"><div class="klbl">A pagar</div><div class="kval tylw">${fmt(totMPending)}</div></div>` +
-    `<div class="kc" style="--_a:var(--grn)"><div class="klbl">Pagas</div><div class="kval tgrn">${fmt(totMPaid)}</div></div>` +
-    `<div class="kc" style="--_a:var(--red)"><div class="klbl">Em aberto</div><div class="kval tred">${fmt(totDiv)}</div></div>`;
+    `<div class="kc" style="--_a:var(--grn)"><div class="klbl">Pago</div><div class="kval tgrn">${fmt(totMPaid)}</div></div>` +
+    `<div class="kc" style="--_a:var(--ylw)"><div class="klbl">Em aberto</div><div class="kval tylw">${fmt(totMPending)}</div></div>` +
+    `<div class="kc" style="--_a:var(--red)"><div class="klbl">Dívida restante</div><div class="kval tred">${fmt(totDiv)}</div></div>` +
+    `<div class="kc" style="--_a:var(--blu)"><div class="klbl">Compras activas</div><div class="kval tblu" style="font-size:1.3rem">${_parcAtivas}</div></div>`;
 
   var h = '';
   if (!S.par.length) {
