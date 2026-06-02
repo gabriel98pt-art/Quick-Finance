@@ -1370,7 +1370,7 @@ var CAT_SEMANTIC = {
   // Finanças / Bancário
   'Tarifas Bancárias': '#818cf8', 'Tarifas Bancarias': '#818cf8', 'Banco': '#818cf8', 'Seguros': '#60a5fa',
   // Parcelas / Crédito / Empréstimo
-  'Parcelas': '#8b5cf6', 'Crédito': '#8b5cf6', 'Credito': '#8b5cf6', 'Empréstimo': '#ef4444', 'Emprestimo': '#ef4444', 'Dívida': '#ef4444', 'Divida': '#ef4444',
+  'Parcelas': '#f43f5e', 'Crédito': '#f43f5e', 'Credito': '#f43f5e', 'Empréstimo': '#ef4444', 'Emprestimo': '#ef4444', 'Dívida': '#ef4444', 'Divida': '#ef4444',
   // Compras
   'Compras': '#f43f5e',
   // Outros
@@ -3289,7 +3289,8 @@ function openSettings() {
   // ── 1. Listas ──
   h += `<div class="sg"><div class="sgt">🏷 Listas</div><div class="sgrid">`;
   h += `<div class="ss"><h4>Fontes de Receita</h4><div class="tl">${tagList(c.src,'src')}</div>${addRow('si_src','Nova fonte...')}</div>`;
-  h += `<div class="ss"><h4>Categorias de Despesa</h4><div class="tl">${tagList(c.ccat,'ccat')}</div>${addRow('si_ccat','Nova categoria...')}</div>`;
+  var _parCol = (c.catColors||{})['ccat:Parcelas'] || '#f43f5e';
+  h += `<div class="ss"><h4>Categorias de Despesa</h4><div class="tl">${tagList(c.ccat,'ccat')}<span class="tag"><input type="color" value="${_parCol}" onchange="setCatColor('ccat','Parcelas',this.value)" style="width:15px;height:15px;border:none;background:none;cursor:pointer;padding:0;border-radius:3px;flex-shrink:0;margin-right:.15rem" title="Cor da categoria">Parcelas</span></div>${addRow('si_ccat','Nova categoria...')}</div>`;
   h += `<div class="ss"><h4>Categorias do Veículo</h4><div class="tl">${tagList(c.vcat||[],'vcat')}</div>${addRow('si_vcat','Nova categoria...')}</div>`;
   h += `</div></div>`;
 
