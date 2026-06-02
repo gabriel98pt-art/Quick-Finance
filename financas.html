@@ -1340,10 +1340,10 @@ function totDesp(ym) { return totFixas(ym) + totCorrManual(ym) + totParcMonth(ym
 function trendHtml(curr, prev, inverseGood) {
   if (prev === 0 && curr === 0) return '';
   var pct = prev !== 0 ? Math.round((curr - prev) / Math.abs(prev) * 100) : null;
-  var better = inverseGood ? curr < prev : curr > prev;
-  var same = curr === prev;
-  var ico = same ? '→' : (better ? '↑' : '↓');
-  var cls = same ? 'trend-eq' : (better ? 'trend-up' : 'trend-dn');
+  var up = curr > prev, same = curr === prev;
+  var good = same ? null : (inverseGood ? !up : up);
+  var ico = same ? '→' : (up ? '↑' : '↓');
+  var cls = same ? 'trend-eq' : (good ? 'trend-up' : 'trend-dn');
   var pctStr = pct !== null ? (pct !== 0 ? (pct > 0 ? '+' : '') + pct + '%' : '=') : (curr > 0 ? 'novo' : '−');
   return '<div class="trend ' + cls + '">' + ico + ' ' + pctStr + '</div>';
 }
