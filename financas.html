@@ -168,8 +168,21 @@ tfoot td{padding:.5rem 1rem;font-size:.8rem;font-weight:700;background:var(--s2)
 .fiu{background:rgba(77,143,255,.07);border-color:rgba(77,143,255,.3)}
 
 /* SETTINGS */
-.ss{background:var(--s1);border:1px solid var(--brd);border-radius:var(--r);padding:.75rem .9rem;margin-bottom:0}
-.ss h4{font-size:.62rem;font-weight:800;color:var(--mut);margin-bottom:.55rem;text-transform:uppercase;letter-spacing:.08em}
+.set-tabs{display:flex;gap:.3rem;overflow-x:auto;scrollbar-width:none;padding:.75rem 1rem .6rem;border-bottom:1px solid var(--brd);background:var(--s2);flex-shrink:0}
+.set-tabs::-webkit-scrollbar{display:none}
+.set-tab{background:none;border:1px solid var(--brd);border-radius:99px;padding:.28rem .7rem;font-size:.72rem;font-weight:600;color:var(--mut);cursor:pointer;white-space:nowrap;transition:background var(--tr),color var(--tr),border-color var(--tr)}
+.set-tab.on{background:var(--blu);color:#fff;border-color:var(--blu)}
+.set-tab:hover:not(.on){background:var(--s3);color:var(--txt)}
+.set-body{padding:1rem;overflow-y:auto;flex:1}
+.sg{margin-bottom:1.4rem;background:var(--s1);border:1px solid var(--brd);border-radius:var(--r);overflow:hidden;box-shadow:var(--sh-sm)}
+.sgt{font-size:.78rem;font-weight:700;color:var(--txt);padding:.7rem 1rem;background:var(--s2);border-bottom:1px solid var(--brd);display:flex;align-items:center;gap:.45rem;letter-spacing:-.01em}
+.sgrid{display:grid;grid-template-columns:1fr 1fr;gap:0}
+.sgrid .ss{border-right:1px solid var(--brd);border-bottom:1px solid var(--brd);border-radius:0;border-top:none;border-left:none}
+.sgrid .ss:nth-child(2n){border-right:none}
+@media(max-width:500px){.sgrid{grid-template-columns:1fr}.sgrid .ss{border-right:none}}
+.ss{padding:.85rem 1rem;margin-bottom:0;border-radius:0;border:none;border-bottom:1px solid var(--brd);background:var(--s1)}
+.ss:last-child{border-bottom:none}
+.ss h4{font-size:.6rem;font-weight:800;color:var(--mut);margin-bottom:.6rem;text-transform:uppercase;letter-spacing:.09em}
 .tl{display:flex;flex-wrap:wrap;gap:.3rem;min-height:1.4rem}
 .tag{background:var(--s2);border:1px solid var(--brd);border-radius:20px;padding:.18rem .55rem .18rem .65rem;font-size:.72rem;display:flex;align-items:center;gap:.2rem}
 .te{cursor:pointer;color:var(--mut);font-size:.65rem;padding:.1rem .2rem;border-radius:4px;line-height:1}
@@ -177,14 +190,16 @@ tfoot td{padding:.5rem 1rem;font-size:.8rem;font-weight:700;background:var(--s2)
 .tx{cursor:pointer;color:var(--mut);font-size:.65rem;padding:.1rem .2rem;border-radius:4px;line-height:1}
 .tx:hover{color:var(--red);background:rgba(255,84,112,.15)}
 .atr{display:flex;gap:.35rem;margin-top:.5rem}
-.sg{margin-bottom:1.2rem}
-.sgt{font-size:.6rem;font-weight:800;text-transform:uppercase;letter-spacing:.1em;color:var(--blu);margin-bottom:.6rem;padding-bottom:.3rem;border-bottom:1px solid var(--brd);display:flex;align-items:center;gap:.35rem}
-.sgrid{display:grid;grid-template-columns:1fr 1fr;gap:.6rem}
-@media(max-width:500px){.sgrid{grid-template-columns:1fr}}
 .srow{display:flex;align-items:center;justify-content:space-between;padding:.4rem 0;border-bottom:1px solid var(--brd)}
 .srow:last-child{border-bottom:none}
 .srow-label{font-size:.8rem;font-weight:500}
 .srow-val{font-size:.75rem;color:var(--mut);display:flex;align-items:center;gap:.5rem}
+/* header more dropdown */
+.hdr-more{position:relative}
+.hdr-more-menu{display:none;position:absolute;top:calc(100% + 6px);right:0;background:var(--s1);border:1px solid var(--brd);border-radius:var(--r);padding:.35rem;box-shadow:var(--sh);z-index:9999;flex-direction:column;gap:.2rem;min-width:160px}
+.hdr-more-menu.open{display:flex}
+.hdr-more-item{display:flex;align-items:center;gap:.55rem;padding:.38rem .6rem;border-radius:var(--r-sm);cursor:pointer;font-size:.78rem;color:var(--txt);background:none;border:none;width:100%;text-align:left}
+.hdr-more-item:hover{background:var(--s2)}
 
 /* CALENDAR */
 .cagrid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
@@ -416,14 +431,20 @@ tr.swipe-del{background:rgba(255,84,112,.28)!important;transition:background .15
     <button class="ib tip" data-tip="Desfazer" id="undoBtn" onclick="undo()" disabled>↩️</button>
     <button class="ib tip" data-tip="Refazer" id="redoBtn" onclick="redo()" disabled>↪️</button>
     <div class="sep"></div>
-    <button class="ib tip" data-tip="Diminuir fonte" onclick="adjustFont(-1)" style="font-size:.75rem;font-weight:700">A−</button>
-    <button class="ib tip" data-tip="Aumentar fonte" onclick="adjustFont(1)"  style="font-size:.85rem;font-weight:700">A+</button>
-    <div class="sep"></div>
     <button class="ib tip" data-tip="Sincronizar cloud" id="fbSyncBtn" onclick="_fbSync(true)">🔄</button>
     <button class="ib tip" data-tip="Guardar cópia" onclick="syncSave()">📤</button>
-    <button class="ib tip" data-tip="Exportar PDF" onclick="exportPDF()">🖨</button>
     <button class="ib tip" data-tip="Definições" onclick="openSettings()">⚙️</button>
     <button class="ib tip" data-tip="Tema" id="themeBtn" onclick="toggleTheme()"></button>
+    <div class="sep"></div>
+    <div class="hdr-more" id="hdrMoreWrap">
+      <button class="ib tip" data-tip="Mais opções" onclick="_hdrMoreToggle(event)">⋯</button>
+      <div class="hdr-more-menu" id="hdrMoreMenu">
+        <button class="hdr-more-item" onclick="adjustFont(-1);_hdrMoreClose()">A− <span style="color:var(--mut);font-size:.72rem">Diminuir fonte</span></button>
+        <button class="hdr-more-item" onclick="adjustFont(1);_hdrMoreClose()">A+ <span style="color:var(--mut);font-size:.72rem">Aumentar fonte</span></button>
+        <div style="height:1px;background:var(--brd);margin:.2rem 0"></div>
+        <button class="hdr-more-item" onclick="exportPDF();_hdrMoreClose()">🖨 <span style="color:var(--mut);font-size:.72rem">Exportar PDF</span></button>
+      </div>
+    </div>
   </div>
 </header>
 
@@ -710,19 +731,20 @@ tr.swipe-del{background:rgba(255,84,112,.28)!important;transition:background .15
 
 <!-- SETTINGS MODAL -->
 <div class="mover" id="setModal" onclick="if(event.target===this)closeSet()">
-  <div class="mbox" style="max-width:660px;width:min(660px,96vw)">
-    <div class="mhdr">
+  <div class="mbox" style="max-width:680px;width:min(680px,96vw);display:flex;flex-direction:column;max-height:90vh">
+    <div class="mhdr" style="flex-shrink:0">
       <div class="mttl">⚙ Definições</div>
       <button class="ib" onclick="closeSet()" style="font-size:1.1rem">✕</button>
     </div>
-    <div id="setBody"></div>
-    <div class="row g1 wrap" style="margin-top:0;padding-top:1rem;border-top:1px solid var(--brd);justify-content:flex-end;flex-shrink:0">
+    <div class="set-tabs" id="setTabs"></div>
+    <div class="set-body" id="setBody"></div>
+    <div class="row g1 wrap" style="padding:.75rem 1rem;border-top:1px solid var(--brd);justify-content:flex-end;flex-shrink:0;flex-wrap:wrap;gap:.4rem">
       <button class="btn sec sm" onclick="showHost()">🌐 Acesso Remoto</button>
       <button class="btn sec sm" onclick="exportCSV()">📊 Exportar CSV</button>
       <button class="btn sec sm" onclick="exportData()">📤 Exportar JSON</button>
       <button class="btn sec sm" onclick="document.getElementById('impFile').click()">📥 Importar</button>
       <input type="file" id="impFile" accept=".json" style="display:none" onchange="importData(this)">
-      <button class="btn dan sm" onclick="clearData()" style="margin-left:.75rem">🗑 Limpar tudo</button>
+      <button class="btn dan sm" onclick="clearData()">🗑 Limpar tudo</button>
       <button class="btn pri" onclick="saveSet()">Guardar</button>
     </div>
   </div>
@@ -3462,7 +3484,7 @@ function openSettings() {
   function addRow(id, ph) { return `<div class="atr"><input class="fi" id="${id}" placeholder="${ph}" style="flex:1" onkeydown="if(event.key==='Enter')addTag('${id.replace('si_','')}')"><button class="btn sec sm" onclick="addTag('${id.replace('si_','')}')">+</button></div>`; }
 
   // ── 1. Listas ──
-  h += `<div class="sg"><div class="sgt">🏷 Listas</div><div class="sgrid">`;
+  h += `<div class="sg" id="sg-listas"><div class="sgt">🏷 Listas</div><div class="sgrid">`;
   h += `<div class="ss"><h4>Fontes de Receita</h4><div class="tl">${tagList(c.src,'src')}</div>${addRow('si_src','Nova fonte...')}</div>`;
   var _parCol = (c.catColors||{})['ccat:Parcelas'] || '#f43f5e';
   h += `<div class="ss"><h4>Categorias de Despesa</h4><div class="tl">${tagList(c.ccat,'ccat')}<span class="tag"><input type="color" value="${_parCol}" onchange="setCatColor('ccat','Parcelas',this.value)" style="width:15px;height:15px;border:none;background:none;cursor:pointer;padding:0;border-radius:3px;flex-shrink:0;margin-right:.15rem" title="Cor da categoria">Parcelas</span></div>${addRow('si_ccat','Nova categoria...')}</div>`;
@@ -3471,7 +3493,7 @@ function openSettings() {
 
   // ── 2. Tipos de Transação ──
   var _txDef = {rec:{lbl:'Receita',col:'#00d4a0'},fix:{lbl:'Fixa',col:'#f97316'},cor:{lbl:'Variável',col:'#ff5470'},fat:{lbl:'Cartão de Crédito',col:'#a78bfa'},trf:{lbl:'Transfer.',col:'#06b6d4'}};
-  h += `<div class="sg"><div class="sgt">🏷 Tipos de Transação</div><div class="sgrid"><div class="ss"><h4>Cores por Tipo (aba Cartões)</h4>`;
+  h += `<div class="sg" id="sg-tipos"><div class="sgt">🏷 Tipos de Transação</div><div class="sgrid"><div class="ss"><h4>Cores por Tipo (aba Cartões)</h4>`;
   Object.keys(_txDef).forEach(function(k) {
     var d = _txDef[k];
     var cur = (c.txTypeColors||{})[k] || d.col;
@@ -3480,7 +3502,7 @@ function openSettings() {
   h += `</div></div></div>`;
 
   // ── 3. Cartões ──
-  h += `<div class="sg"><div class="sgt">💳 Cartões</div><div class="sgrid">`;
+  h += `<div class="sg" id="sg-cartoes"><div class="sgt">💳 Cartões</div><div class="sgrid">`;
   h += `<div class="ss"><h4>Métodos de Pagamento</h4><div class="tl">${tagList(c.pay,'pay')}</div>${addRow('si_pay','Novo cartão...')}</div>`;
   h += `<div class="ss"><h4>Tipo de Cartão</h4>`;
   (c.pay||[]).forEach(function(x){
@@ -3495,8 +3517,8 @@ function openSettings() {
   h += `</div>`;
   h += `</div></div>`;
 
-  // ── 3. Metas & Orçamento ──
-  h += `<div class="sg"><div class="sgt">💰 Metas &amp; Orçamento</div><div class="sgrid">`;
+  // ── 4. Metas & Orçamento ──
+  h += `<div class="sg" id="sg-metas"><div class="sgt">💰 Metas &amp; Orçamento</div><div class="sgrid">`;
   h += `<div class="ss"><h4>Meta de Poupança Mensal (€)</h4><input class="fi fiu" id="si_sgoal" type="number" step="0.01" value="${c.sgoal||500}" style="max-width:140px;margin-top:.15rem"></div>`;
   h += `<div class="ss"><h4>Orçamento por Categoria (€/mês)</h4>`;
   (c.ccat||[]).forEach(function(x){
@@ -3504,12 +3526,12 @@ function openSettings() {
   });
   h += `</div></div></div>`;
 
-  // ── 4. Veículo ──
-  h += `<div class="sg"><div class="sgt">🚘 Veículo</div>`;
+  // ── 5. Veículo ──
+  h += `<div class="sg" id="sg-veiculo"><div class="sgt">🚘 Veículo</div>`;
   h += `<div class="ss"><h4>Km Mensais (para custo/km)</h4><input class="fi fiu" id="si_km" type="number" step="1" value="${S.cfg.kmMensal||0}" style="max-width:120px;margin-top:.15rem" placeholder="ex: 1500"></div>`;
   h += `</div>`;
 
-  // ── 5. Cores ──
+  // ── 6. Cores ──
   var _cols = S.cfg.colors || {};
   function _cp(id, val, lbl) {
     return '<div style="display:flex;flex-direction:column;align-items:center;gap:.22rem">'
@@ -3517,7 +3539,7 @@ function openSettings() {
       + '<span style="font-size:.6rem;color:var(--mut);text-align:center;max-width:48px;line-height:1.2">'+lbl+'</span>'
       + '</div>';
   }
-  h += '<div class="sg"><div class="sgt" style="display:flex;align-items:center">🎨 Cores'
+  h += '<div class="sg" id="sg-cores"><div class="sgt" style="display:flex;align-items:center">🎨 Cores'
     + '<button class="btn sec sm" onclick="resetColors()" style="margin-left:auto;font-size:.62rem;padding:.18rem .5rem">↺ Repor tudo</button></div>';
   h += '<div class="ss" style="margin-bottom:.55rem"><h4>Cores de Destaque</h4>'
     + '<div style="display:flex;gap:1rem;flex-wrap:wrap;margin-top:.5rem;justify-content:flex-start">'
@@ -3546,10 +3568,10 @@ function openSettings() {
   h += _thSection('light', _COLOR_LIGHT_DEF, _cols.light);
   h += '</div></div>';
 
-  // ── 6. Dados ──
+  // ── 7. Dados ──
   var lastExpStr = S.cfg.lastExport ? new Date(S.cfg.lastExport).toLocaleDateString('pt-PT') : 'Nunca';
   var daysSince = S.cfg.lastExport ? Math.floor((Date.now()-S.cfg.lastExport)/864e5) : null;
-  h += `<div class="sg"><div class="sgt">💾 Dados</div>`;
+  h += `<div class="sg" id="sg-dados"><div class="sgt">💾 Dados</div>`;
   h += `<div class="ss"><h4>☁ Sync entre dispositivos</h4>
     <div style="font-size:.75rem;color:var(--mut);margin-bottom:.6rem;line-height:1.5">
       <strong style="color:var(--txt)">iPhone:</strong> toca em <strong>☁</strong> no cabeçalho → "Salvar em Ficheiros" → escolhe iCloud Drive.<br>
@@ -3564,6 +3586,20 @@ function openSettings() {
   h += `</div>`;
 
   document.getElementById('setBody').innerHTML = h;
+  var _TABS = [
+    {id:'listas',  lbl:'🏷 Listas'},
+    {id:'tipos',   lbl:'🎨 Tipos'},
+    {id:'cartoes', lbl:'💳 Cartões'},
+    {id:'metas',   lbl:'💰 Metas'},
+    {id:'veiculo', lbl:'🚘 Veículo'},
+    {id:'cores',   lbl:'🖌 Cores'},
+    {id:'dados',   lbl:'💾 Dados'}
+  ];
+  var tabsEl = document.getElementById('setTabs');
+  if (tabsEl) tabsEl.innerHTML = _TABS.map(function(t) {
+    return '<button class="set-tab'+(t.id===_setTab?' on':'')+'" onclick="_setTabSwitch(\''+t.id+'\')">'+t.lbl+'</button>';
+  }).join('');
+  _setTabSwitch(_setTab, true);
   document.getElementById('setModal').classList.add('on');
 }
 
@@ -6257,6 +6293,44 @@ function qSave(){
   }
   saveState(); renderTab(CUR); qClose();
   showToast('✓ '+(_qT==='i'?'Receita':'Despesa')+' guardada — '+amt.toFixed(2)+' €');
+}
+
+// ================================================================
+// HEADER MORE DROPDOWN
+// ================================================================
+function _hdrMoreToggle(e) {
+  if (e) e.stopPropagation();
+  var m = document.getElementById('hdrMoreMenu');
+  if (m) m.classList.toggle('open');
+}
+function _hdrMoreClose() {
+  var m = document.getElementById('hdrMoreMenu');
+  if (m) m.classList.remove('open');
+}
+document.addEventListener('click', function(e) {
+  var wrap = document.getElementById('hdrMoreWrap');
+  if (wrap && !wrap.contains(e.target)) _hdrMoreClose();
+});
+
+// ================================================================
+// SETTINGS TABS
+// ================================================================
+var _setTab = 'listas';
+function _setTabSwitch(tab, noScroll) {
+  _setTab = tab;
+  var ids = ['listas','tipos','cartoes','metas','veiculo','cores','dados'];
+  ids.forEach(function(id) {
+    var el = document.getElementById('sg-'+id);
+    if (el) el.style.display = (id === tab) ? '' : 'none';
+  });
+  var tabs = document.querySelectorAll('.set-tab');
+  tabs.forEach(function(t) {
+    t.classList.toggle('on', t.textContent.includes(tab) || t.getAttribute('onclick').includes("'"+tab+"'"));
+  });
+  if (!noScroll) {
+    var body = document.getElementById('setBody');
+    if (body) body.scrollTop = 0;
+  }
 }
 
 // ================================================================
