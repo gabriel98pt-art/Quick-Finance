@@ -1601,9 +1601,15 @@ function makeChart(id, type, labels, datasets, opts) {
 // ================================================================
 // GLOBAL NAV
 // ================================================================
+function _resetListFilters() {
+  REC_SEARCH=''; REC_CARD='all'; DC_SEARCH=''; DC_CARD='all';
+  var rs=document.getElementById('recSearch'); if(rs) rs.value='';
+  var ds=document.getElementById('dcSearch');  if(ds) ds.value='';
+}
 function globalNav(dir) {
   globalMonth = addMonths(globalMonth, dir);
   S.cfg.lastMonth = globalMonth;
+  _resetListFilters();
   saveState();
   renderActive();
 }
@@ -1611,6 +1617,7 @@ function globalNavYear(dir) {
   var yr = Math.max(YR_MIN, Math.min(YR_MAX, parseInt(globalMonth.slice(0,4)) + dir));
   globalMonth = yr + '-' + globalMonth.slice(5);
   S.cfg.lastMonth = globalMonth;
+  _resetListFilters();
   saveState();
   renderActive();
 }
