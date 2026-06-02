@@ -379,7 +379,30 @@ code{background:var(--s2);padding:.1rem .35rem;border-radius:4px;font-size:.8em}
 .srch-bar .srch-clr:hover{background:var(--s3);color:var(--txt)}
 /* long-press to delete */
 tr.swipe-row{cursor:default}
-tr.swipe-del{background:rgba(255,84,112,.28)!important;transition:background .15s}</style>
+tr.swipe-del{background:rgba(255,84,112,.28)!important;transition:background .15s}
+/* month comparison */
+.cmp-row{display:flex;gap:.5rem;flex-wrap:wrap;padding:.3rem 0 .6rem;margin-bottom:.25rem}
+.cmp-chip{font-size:.7rem;padding:.2rem .55rem;border-radius:20px;background:var(--s2);display:flex;align-items:center;gap:.3rem}
+.cmp-up{color:#00d4a0}.cmp-dn{color:#ff5470}.cmp-eq{color:var(--mut)}
+/* alert badge on tab */
+.tb-badge{display:inline-block;background:var(--red);color:#fff;font-size:.55rem;font-weight:700;border-radius:99px;padding:.05rem .3rem;margin-left:.25rem;vertical-align:middle;line-height:1.5}
+/* iOS install banner */
+.ios-install{background:var(--s2);border-bottom:1px solid var(--brd);padding:.55rem 1rem;display:flex;align-items:center;gap:.6rem;font-size:.75rem}
+.ios-install button{background:none;border:none;color:var(--mut);cursor:pointer;font-size:.9rem;margin-left:auto;padding:.1rem .3rem}
+/* print */
+@media print{
+  .hdr,.tabs,.nav-bar,.fab,.ios-install,button,.ib,.tb,.sep,#backupAlert,.srch-bar,#dAlerts,.tch button,.ic{display:none!important}
+  body{background:#fff;color:#000;font-size:11pt}
+  .pnl{display:block!important}
+  .pnl:not(.on){display:none!important}
+  .tc{border:1px solid #ddd;margin-bottom:.75rem;break-inside:avoid}
+  .kc{border:1px solid #ddd;padding:.4rem}
+  .kg{display:grid;grid-template-columns:repeat(4,1fr);gap:.4rem}
+  table{width:100%;border-collapse:collapse}
+  th,td{border:1px solid #ddd;padding:.3rem .5rem;font-size:9pt}
+  .dash-grid{display:block}
+  canvas{max-height:220px}
+}</style>
 </head>
 <body>
 
@@ -394,6 +417,7 @@ tr.swipe-del{background:rgba(255,84,112,.28)!important;transition:background .15
     <div class="sep"></div>
     <button class="ib" id="fbSyncBtn" onclick="_fbSync(true)">🔄</button>
     <button class="ib" onclick="syncSave()">📤</button>
+    <button class="ib" onclick="exportPDF()" title="Exportar PDF">🖨</button>
     <button class="ib" onclick="openSettings()">⚙️</button>
     <button class="ib" id="themeBtn" onclick="toggleTheme()" title="Alternar tema"></button>
   </div>
@@ -423,11 +447,19 @@ tr.swipe-del{background:rgba(255,84,112,.28)!important;transition:background .15
   </div>
 </div>
 
+<!-- iOS install banner -->
+<div id="iosInstallBanner" style="display:none" class="ios-install">
+  <span>📲</span>
+  <span>Instala a app: toca em <strong>Partilhar</strong> → <strong>Adicionar ao Início</strong></span>
+  <button onclick="document.getElementById('iosInstallBanner').style.display='none';localStorage.setItem('_iosDismiss','1')">✕</button>
+</div>
+
 <!-- DASHBOARD -->
 <div class="pnl on" id="p-dashboard">
   <div id="backupAlert"></div>
   <div id="dAlerts" class="alist"></div>
   <div class="kg" id="dKpis"></div>
+  <div id="dComp" class="cmp-row"></div>
   <div class="dash-grid">
     <!-- Coluna esquerda: donut + categorias -->
     <div class="cc" style="height:100%;display:flex;flex-direction:column;box-sizing:border-box;min-width:0">
@@ -1569,6 +1601,7 @@ function updateGlobalNav() {
   var yrEl = document.getElementById('globalYearLbl');
   if (el) el.textContent = monthLabelFull(globalMonth);
   if (yrEl) yrEl.textContent = globalMonth.slice(0,4);
+  _updateAlertBadge();
 }
 
 // ================================================================
@@ -1717,6 +1750,9 @@ function renderDashboard() {
         {l:'Saldo',     v:sld,  c:sld>=0?'var(--grn)':'var(--red)', a:sld>=0?'var(--grn)':'var(--red)'},
         {l:'Parcelas',  v:prc,  c:parcCol,      a:parcCol}
       ];
+  _renderComp(ym);
+  _updateAlertBadge();
+
   var kEl = document.getElementById('dKpis');
   if (kEl) {
     var futureBanner = isFutureYm
@@ -3662,11 +3698,17 @@ function renderImport() {
     '<div class="imp-sub">CSV &middot; TXT &middot; PDF</div>' +
     '</div>' +
     '<input type="file" id="impFileIn" accept=".csv,.txt,.pdf" style="display:none" onchange="_impFile(this)">' +
+    '<div style="margin-top:.8rem;display:flex;gap:.4rem;flex-wrap:wrap">' +
+    '<button class="btn sec sm" onclick="_impBankFile(\'Wise\')">🌐 Wise CSV</button>' +
+    '<button class="btn sec sm" onclick="_impBankFile(\'ActivoBank\')">🏦 ActivoBank CSV</button>' +
+    '<button class="btn sec sm" onclick="_impBankFile(\'Revolut\')">💜 Revolut CSV</button>' +
+    '</div>' +
     '<div class="inf" style="margin-top:.9rem;font-size:.77rem">' +
     '<strong>Formatos suportados</strong><br>' +
-    '&bull; <strong>CSV</strong> &mdash; qualquer separador (;  ,  tab), com colunas Data, Descrição, Valor / Débito / Crédito<br>' +
-    '&bull; <strong>TXT</strong> &mdash; texto livre com padrões de data e valor (ex.: cópia de ecrã de homebanking)<br>' +
-    '&bull; <strong>PDF</strong> &mdash; extrato em PDF (requer ligação à internet para o motor de leitura)<br>' +
+    '&bull; <strong>Wise</strong> &mdash; exporta em Account > Statements > CSV<br>' +
+    '&bull; <strong>ActivoBank</strong> &mdash; exporta em Movimentos > Exportar CSV<br>' +
+    '&bull; <strong>Revolut</strong> &mdash; exporta em Conta > Extrato > CSV<br>' +
+    '&bull; <strong>PDF / TXT</strong> &mdash; qualquer extrato bancário<br>' +
     '<span style="color:var(--ylw)">⚠ Se o PDF não funcionar, copie o texto e guarde como .txt</span>' +
     '</div></div></div>' +
     '<div class="tc" style="margin-top:.75rem"><div class="tch">' +
@@ -6212,6 +6254,78 @@ function qSave(){
   saveState(); renderTab(CUR); qClose();
   showToast('✓ '+(_qT==='i'?'Receita':'Despesa')+' guardada — '+amt.toFixed(2)+' €');
 }
+
+// ================================================================
+// FEATURE 5 — Comparação mês vs anterior
+// ================================================================
+function _renderComp(ym) {
+  var el = document.getElementById('dComp'); if (!el) return;
+  var prev = addMonths(ym, -1);
+  var rec = totRec(ym), pRec = totRec(prev);
+  var desp = totDesp(ym), pDesp = totDesp(prev);
+  var sld = rec - desp, pSld = pRec - pDesp;
+  function chip(lbl, cur, old) {
+    if (!old) return '';
+    var diff = cur - old, pct = Math.round(diff / Math.abs(old) * 100);
+    var cls = diff > 0 ? 'cmp-up' : diff < 0 ? 'cmp-dn' : 'cmp-eq';
+    var arr = diff > 0 ? '↑' : diff < 0 ? '↓' : '=';
+    return '<span class="cmp-chip"><span class="'+cls+'">'+arr+' '+Math.abs(pct)+'%</span><span style="color:var(--mut)">'+lbl+' vs '+monthLabel(prev)+'</span></span>';
+  }
+  el.innerHTML = chip('Receitas', rec, pRec) + chip('Despesas', desp, pDesp) + chip('Saldo', sld, pSld);
+}
+
+// ================================================================
+// FEATURE 6 — PDF / Impressão
+// ================================================================
+function exportPDF() {
+  window.print();
+}
+
+// ================================================================
+// FEATURE 8 — Badge de alertas na aba Dashboard
+// ================================================================
+function _updateAlertBadge() {
+  var tab = document.querySelector('.tb[onclick*="dashboard"]');
+  if (!tab) return;
+  var old = tab.querySelector('.tb-badge');
+  var ym = globalMonth;
+  var count = S.df.filter(function(d) {
+    if (!isActiveForYm(d, ym) || d.autoRenew || isPaidInYm(d, ym)) return false;
+    return daysUntil(d.day) <= 5;
+  }).length;
+  if (count > 0) {
+    if (!old) { var b = document.createElement('span'); b.className = 'tb-badge'; tab.appendChild(b); old = b; }
+    old.textContent = count;
+  } else {
+    if (old) old.remove();
+  }
+}
+
+// ================================================================
+// FEATURE 9 — Import CSV bancos (UI)
+// ================================================================
+// O parser genérico já suporta Wise/ActivoBank/Revolut.
+// Adicionamos botões de atalho que pré-selecionam o ficheiro e identificam a fonte.
+var _impBankHint = '';
+function _impBankFile(bank) {
+  _impBankHint = bank;
+  document.getElementById('impFileIn').click();
+}
+
+// ================================================================
+// FEATURE 10 — Banner de instalação iOS
+// ================================================================
+(function() {
+  var ua = navigator.userAgent;
+  var isIOS = /iphone|ipad|ipod/i.test(ua);
+  var isSafari = /safari/i.test(ua) && !/crios|fxios|opios/i.test(ua);
+  var isStandalone = window.navigator.standalone === true;
+  var dismissed = localStorage.getItem('_iosDismiss');
+  if (isIOS && isSafari && !isStandalone && !dismissed) {
+    var b = document.getElementById('iosInstallBanner');
+    if (b) b.style.display = 'flex';
+  }
+})();
 </script>
 
 <!-- QUICK-ADD FAB -->
