@@ -369,7 +369,18 @@ code{background:var(--s2);padding:.1rem .35rem;border-radius:4px;font-size:.8em}
 .qsave:active{opacity:.82;transform:scale(.98)}
 .qsave:disabled{opacity:.35;pointer-events:none}
 .qsave.qte{background:var(--red);color:#fff;box-shadow:0 4px 16px rgba(255,84,112,.3)}
-.qsave.qti{background:var(--grn);color:#0d0f18;box-shadow:0 4px 16px rgba(0,212,160,.24)}</style>
+.qsave.qti{background:var(--grn);color:#0d0f18;box-shadow:0 4px 16px rgba(0,212,160,.24)}
+/* search + card filter bar */
+.srch-bar{display:flex;align-items:center;gap:.4rem;flex-wrap:wrap;padding:.55rem 1rem;border-bottom:1px solid var(--brd);background:var(--s2)}
+.srch-bar input{flex:1;min-width:120px;background:var(--bg);border:1px solid var(--brd);border-radius:var(--r-sm);padding:.32rem .65rem;font-size:.8rem;color:var(--txt);outline:none}
+.srch-bar input:focus{border-color:var(--blu)}
+.srch-bar select{background:var(--bg);border:1px solid var(--brd);border-radius:var(--r-sm);padding:.3rem .55rem;font-size:.78rem;color:var(--txt);cursor:pointer}
+.srch-bar .srch-clr{background:none;border:none;color:var(--mut);cursor:pointer;font-size:.85rem;padding:.2rem .4rem;border-radius:4px;line-height:1}
+.srch-bar .srch-clr:hover{background:var(--s3);color:var(--txt)}
+/* swipe-to-delete */
+tr.swipe-row{transition:transform .18s ease,background .12s;will-change:transform;cursor:default}
+tr.swipe-row.swiping{transition:none}
+tr.swipe-del{background:rgba(255,84,112,.18)!important}</style>
 </head>
 <body>
 
@@ -464,6 +475,11 @@ code{background:var(--s2);padding:.1rem .35rem;border-radius:4px;font-size:.8em}
       <span class="slbl" style="margin:0">Registos</span>
       <button class="btn pri sm" onclick="openModal('receita')">+ Adicionar</button>
     </div>
+    <div class="srch-bar">
+      <input id="recSearch" type="search" placeholder="🔍 Pesquisar…" oninput="REC_SEARCH=this.value;renderReceitas()" value="">
+      <select id="recCardFilt" onchange="REC_CARD=this.value;renderReceitas()"><option value="all">Todas as contas</option></select>
+      <button class="srch-clr" onclick="REC_SEARCH='';REC_CARD='all';document.getElementById('recSearch').value='';renderReceitas()" title="Limpar filtros">✕</button>
+    </div>
     <div class="tw"><table>
       <thead><tr><th>Data</th><th>Fonte</th><th>Valor</th><th>Conta</th><th>Notas</th><th></th></tr></thead>
       <tbody id="rBody"></tbody><tfoot id="rFoot"></tfoot>
@@ -494,6 +510,11 @@ code{background:var(--s2);padding:.1rem .35rem;border-radius:4px;font-size:.8em}
         <button class="btn sec sm" id="dcFilterBtn" onclick="toggleDcFilter()" title="Filtrar por intervalo de datas">🔍 Período</button>
         <button class="btn pri sm" onclick="openModal('dcorr')">+ Adicionar</button>
       </div>
+    </div>
+    <div class="srch-bar">
+      <input id="dcSearch" type="search" placeholder="🔍 Pesquisar…" oninput="DC_SEARCH=this.value;DC_PG=1;renderDespesas()" value="">
+      <select id="dcCardFilt" onchange="DC_CARD=this.value;DC_PG=1;renderDespesas()"><option value="all">Todos os cartões</option></select>
+      <button class="srch-clr" onclick="DC_SEARCH='';DC_CARD='all';document.getElementById('dcSearch').value='';DC_PG=1;renderDespesas()" title="Limpar filtros">✕</button>
     </div>
     <div id="dcFilterBar" style="display:none;padding:.55rem 1rem;border-bottom:1px solid var(--brd);background:var(--s2)">
       <div class="row wrap" style="gap:.35rem;align-items:center">
@@ -1106,6 +1127,8 @@ function _syncDcInputs() {
 var globalMonth = '2026-05';
 var DC_SORT='date',DC_DIR=-1,DC_PG=1,DC_PGS=15;
 var DC_FROM=null,DC_TO=null,_dcFilterOpen=false;
+var REC_SEARCH='',REC_CARD='all';
+var DC_SEARCH='',DC_CARD='all';
 var CT_SORT='date',CT_DIR=-1,CT_PG=1,CT_PGS=15;
 
 // ================================================================
@@ -1813,16 +1836,32 @@ function renderReceitas() {
     `<div class="kc" style="--_a:var(--grn)"><div class="klbl">Total</div><div class="kval tgrn">${fmt(mnTot)}</div></div>` +
     srcCards;
 
+  // Card filter populate
+  var cardFiltEl = document.getElementById('recCardFilt');
+  if (cardFiltEl) {
+    var recCards = {}; S.rec.forEach(function(r){ if(r.card) recCards[r.card]=1; });
+    var curCard = REC_CARD;
+    cardFiltEl.innerHTML = '<option value="all">Todas as contas</option>' +
+      Object.keys(recCards).map(function(c){ return '<option value="'+_esc(c)+'"'+(c===curCard?' selected':'')+'>'+_esc(c)+'</option>'; }).join('');
+    if (!recCards[REC_CARD]) REC_CARD = 'all';
+  }
+
   // Filtered rows
+  var _rq = REC_SEARCH.toLowerCase();
   var rows = S.rec.filter(function(r){
-    return r.date && r.date.startsWith(globalMonth) && (srcFilt==='all'||r.src===srcFilt);
+    if (!r.date || !r.date.startsWith(globalMonth)) return false;
+    if (srcFilt !== 'all' && r.src !== srcFilt) return false;
+    if (REC_CARD !== 'all' && r.card !== REC_CARD) return false;
+    if (_rq && !((r.src||'').toLowerCase().includes(_rq) || (r.notes||'').toLowerCase().includes(_rq) || (r.card||'').toLowerCase().includes(_rq))) return false;
+    return true;
   }).sort(function(a,b){return b.date>a.date?1:-1;});
   var tot = sumVal(rows);
 
   var el = document.getElementById('rBody');
   if (el) el.innerHTML = rows.length ? rows.map(function(r) {
-    return `<tr><td>${fmtDate(r.date)}</td><td>${_esc(r.src||'')}</td><td class="tgrn bold">${fmt(r.val)}</td><td>${_esc(r.card||'—')}</td><td>${_esc(r.notes||'—')}</td><td><div class="ac"><button class="ic e" onclick="openModal('receita',${r.id})">✏</button><button class="ic d" onclick="delRec('rec',${r.id})">🗑</button></div></td></tr>`;
+    return `<tr class="swipe-row" data-sid="${r.id}" data-stype="rec"><td>${fmtDate(r.date)}</td><td>${_esc(r.src||'')}</td><td class="tgrn bold">${fmt(r.val)}</td><td>${_esc(r.card||'—')}</td><td>${_esc(r.notes||'—')}</td><td><div class="ac"><button class="ic e" onclick="openModal('receita',${r.id})">✏</button><button class="ic d" onclick="delRec('rec',${r.id})">🗑</button></div></td></tr>`;
   }).join('') : `<tr><td colspan="6"><div class="empty"><span class="ei">↗</span>Nenhuma receita em ${monthLabel(globalMonth)}</div></td></tr>`;
+  _initSwipe('rBody', 'rec');
   var ft = document.getElementById('rFoot');
   if (ft) ft.innerHTML = `<tr><td colspan="2">Total ${monthLabel(globalMonth)}</td><td class="tgrn">${fmt(tot)}</td><td colspan="3"></td></tr>`;
 }
@@ -1860,11 +1899,29 @@ function renderDespesas() {
   var ft = document.getElementById('dfFoot');
   if (ft) ft.innerHTML = `<tr><td colspan="2">Total</td><td class="tred">${fmt(totFixas(ym))}</td><td colspan="5"></td></tr>`;
 
+  // Card filter populate
+  var dcCardFiltEl = document.getElementById('dcCardFilt');
+  if (dcCardFiltEl) {
+    var dcCards = {}; S.dc.forEach(function(d){ var c=d.card||''; if(c) dcCards[c]=1; });
+    S.par.forEach(function(p){ if(p.card) dcCards[p.card]=1; });
+    var curDcCard = DC_CARD;
+    dcCardFiltEl.innerHTML = '<option value="all">Todos os cartões</option>' +
+      Object.keys(dcCards).map(function(c){ return '<option value="'+_esc(c)+'"'+(c===curDcCard?' selected':'')+'>'+_esc(c)+'</option>'; }).join('');
+    if (!dcCards[DC_CARD]) DC_CARD = 'all';
+  }
+
   // Correntes — filtro por intervalo ou por mês
   var _dcRangeActive = !!(DC_FROM && DC_TO);
+  var _dcq = DC_SEARCH.toLowerCase();
   var corr = S.dc.filter(function(d) {
-    if (_dcRangeActive) return d.date >= DC_FROM && d.date <= DC_TO;
-    return inMonth(d.date, ym);
+    if (_dcRangeActive) { if (d.date < DC_FROM || d.date > DC_TO) return false; }
+    else { if (!inMonth(d.date, ym)) return false; }
+    if (DC_CARD !== 'all') {
+      var dcard = d.card || (d._pid ? (S.par.find(function(p){return p.id===d._pid;})||{}).card||'' : '');
+      if (dcard !== DC_CARD) return false;
+    }
+    if (_dcq && !((d.name||'').toLowerCase().includes(_dcq) || (d.cat||'').toLowerCase().includes(_dcq) || (d.notes||'').toLowerCase().includes(_dcq) || (d.card||'').toLowerCase().includes(_dcq))) return false;
+    return true;
   }).map(function(d) {
     if (d._src === 'parc' && !d.card && d._pid) {
       var par = S.par.find(function(p){ return p.id === d._pid; });
@@ -1908,8 +1965,9 @@ function renderDespesas() {
     }
     var valCls = d._src === 'parc' ? 'tpur' : d._src === 'veh' ? 'tylw' : d._src === 'fat' ? 'tblu' : 'tred';
     var notesCell = _esc(d.notes || '—');
-    return `<tr class="parc-r"><td>${fmtDate(d.date)}</td><td style="font-size:.82rem">${nameCell}</td><td>${catLabel}</td><td class="${valCls}">${fmt(d.val)}</td><td>${d.card||'—'}</td><td style="font-size:.74rem">${notesCell}</td><td><div class="ac">${!isAuto?`<button class="ic e" onclick="openModal('dcorr',${d.id})">✏</button><button class="ic d" onclick="delRec('dc',${d.id})">🗑</button>`:'<span class="tmut" style="font-size:.63rem;padding:.15rem .35rem;background:var(--s2);border-radius:4px" title="Criado automaticamente — edite na aba de origem">auto</span>'}</div></td></tr>`;
+    return `<tr class="parc-r swipe-row" data-sid="${d.id}" data-stype="${isAuto?'':'dc'}"><td>${fmtDate(d.date)}</td><td style="font-size:.82rem">${nameCell}</td><td>${catLabel}</td><td class="${valCls}">${fmt(d.val)}</td><td>${d.card||'—'}</td><td style="font-size:.74rem">${notesCell}</td><td><div class="ac">${!isAuto?`<button class="ic e" onclick="openModal('dcorr',${d.id})">✏</button><button class="ic d" onclick="delRec('dc',${d.id})">🗑</button>`:'<span class="tmut" style="font-size:.63rem;padding:.15rem .35rem;background:var(--s2);border-radius:4px" title="Criado automaticamente — edite na aba de origem">auto</span>'}</div></td></tr>`;
   }).join('') : `<tr><td colspan="7"><div class="empty"><span class="ei">📋</span>Nenhuma despesa em ${dcPeriodLbl}</div></td></tr>`;
+  _initSwipe('dcBody', 'dc');
   var totV = sumVal(corr.filter(function(d){return d._src==='veh';}));
   var totFat = sumVal(corr.filter(function(d){return d._src==='fat';}));
   var totAll = totM + totP + totV + totFat;
@@ -3266,6 +3324,49 @@ function saveModal() {
   closeModal();
   renderTab(CUR);
   showToast('✓ Guardado');
+}
+
+function _initSwipe(tbodyId, type) {
+  var tbody = document.getElementById(tbodyId);
+  if (!tbody || !('ontouchstart' in window)) return;
+  var rows = tbody.querySelectorAll('tr.swipe-row[data-stype="'+type+'"]');
+  rows.forEach(function(row) {
+    var sx = 0, dx = 0, active = false;
+    row.addEventListener('touchstart', function(e) {
+      sx = e.touches[0].clientX; dx = 0; active = true;
+    }, {passive: true});
+    row.addEventListener('touchmove', function(e) {
+      if (!active) return;
+      dx = e.touches[0].clientX - sx;
+      if (dx < 0) {
+        row.classList.add('swiping');
+        row.style.transform = 'translateX('+Math.max(dx, -100)+'px)';
+        if (dx < -60) row.classList.add('swipe-del');
+        else row.classList.remove('swipe-del');
+      }
+    }, {passive: true});
+    row.addEventListener('touchend', function() {
+      active = false;
+      row.classList.remove('swiping');
+      if (dx < -70 && row.dataset.stype) {
+        var id = parseInt(row.dataset.sid);
+        row.style.transform = 'translateX(-100%)';
+        row.style.opacity = '0';
+        setTimeout(function(){ delRecSwipe(row.dataset.stype, id); }, 160);
+      } else {
+        row.style.transform = '';
+        row.classList.remove('swipe-del');
+      }
+    });
+  });
+}
+
+function delRecSwipe(type, id) {
+  snapshot();
+  if (type === 'rec') S.rec = S.rec.filter(function(x){return x.id!==id;});
+  else if (type === 'dc') S.dc = S.dc.filter(function(x){return x.id!==id;});
+  saveState(); renderActive();
+  showToast('🗑 Eliminado — toca ↩️ para desfazer');
 }
 
 function delRec(type, id) {
