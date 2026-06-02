@@ -101,7 +101,14 @@ body.compact tfoot td{padding:.22rem .6rem}
 tbody tr:last-child td{border-bottom:none}
 tbody tr:nth-child(even){background:rgba(128,128,255,.03)}
 tbody tr:hover{background:var(--s2)!important}
-tfoot td{padding:.5rem 1rem;font-size:.8rem;font-weight:700;background:var(--s2);border-top:1px solid var(--brd)}
+tfoot td{padding:.5rem 1rem;font-size:.8rem;font-weight:700;background:var(--s2);border-top:2px solid var(--brd);position:sticky;bottom:0;z-index:2}
+/* category color stripe */
+tbody tr td:first-child{border-left:3px solid transparent}
+tbody tr[data-cc] td:first-child{border-left-color:var(--cc)}
+/* scrollable tw for long tables */
+.tw-tall{max-height:58vh;overflow-y:auto;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.tw-tall::-webkit-scrollbar{width:4px;height:4px}
+.tw-tall::-webkit-scrollbar-thumb{background:var(--brd);border-radius:4px}
 .ac{display:flex;gap:.2rem;align-items:center}
 
 /* EMPTY */
@@ -1136,6 +1143,14 @@ function showToast(msg, type) {
   _toastT = setTimeout(function() { el.classList.remove('on'); }, dur);
 }
 
+function _rowCatColor(cat, type) {
+  type = type || 'ccat';
+  return (S.cfg.catColors||{})[type+':'+cat] || getDefaultCatColor(type, cat);
+}
+function _setTwTall(twEl, rowCount) {
+  if (!twEl) return;
+  twEl.classList.toggle('tw-tall', rowCount > 12);
+}
 function _setAnimBody(id, html) {
   var el = document.getElementById(id);
   if (!el) return;
@@ -2028,8 +2043,10 @@ function renderReceitas() {
   var tot = sumVal(rows);
 
   _setAnimBody('rBody', rows.length ? rows.map(function(r) {
-    return `<tr class="swipe-row" data-sid="${r.id}" data-stype="rec"><td title="${fmtDate(r.date)}">${fmtDateShort(r.date)}</td><td>${_esc(r.src||'')}</td><td class="tgrn bold">${fmt(r.val)}</td><td>${_esc(r.card||'—')}</td><td>${_esc(r.notes||'—')}</td><td><div class="ac"><button class="ic e" onclick="openModal('receita',${r.id})">✏</button><button class="ic d" onclick="delRec('rec',${r.id})">🗑</button></div></td></tr>`;
+    var _cc = _rowCatColor(r.src, 'src');
+    return `<tr class="swipe-row" data-sid="${r.id}" data-stype="rec" data-cc="${_cc}" style="--cc:${_cc}"><td title="${fmtDate(r.date)}">${fmtDateShort(r.date)}</td><td>${_esc(r.src||'')}</td><td class="tgrn bold">${fmt(r.val)}</td><td>${_esc(r.card||'—')}</td><td>${_esc(r.notes||'—')}</td><td><div class="ac"><button class="ic e" onclick="openModal('receita',${r.id})">✏</button><button class="ic d" onclick="delRec('rec',${r.id})">🗑</button></div></td></tr>`;
   }).join('') : _emptyRow(6,'↗','Nenhuma receita em '+monthLabel(globalMonth),'Usa o botão + para registar uma entrada'));
+  _setTwTall(document.querySelector('#p-receitas .tw'), rows.length);
   _initSwipe('rBody', 'rec');
   var rp=document.getElementById('recPin'); if(rp) rp.classList.toggle('on',REC_PIN);
   var ft = document.getElementById('rFoot');
@@ -2099,7 +2116,9 @@ function renderDespesas() {
     var inactBadge = inactive ? ' <span class="bdg" style="font-size:.6rem;background:rgba(128,128,128,.15);color:var(--mut)" title="Fora do período de vigência configurado">inativo</span>' : '';
     var autoBadge = d.autoRenew ? ' <span class="bdg" style="font-size:.58rem;background:rgba(0,212,160,.12);color:var(--grn);border:1px solid rgba(0,212,160,.25)" title="Renovação automática — não gera aviso">auto</span>' : '';
     var chkDisabled = inactive || d.autoRenew ? 'disabled' : '';
-    return `<tr style="${rowStyle}"><td style="${urg};font-weight:${urg?700:400}">${_esc(d.name)}${inactBadge}${autoBadge}</td><td>${catBadge('fcat',d.cat)}</td><td class="bold">${inactive?'<span style="color:var(--mut)">'+fmt(d.val)+'</span>':fmt(d.val)}</td><td style="${urg}">${d.day||'—'}</td><td>${_esc(d.card||'—')}</td><td><input type="checkbox" ${_paid?'checked':''} ${chkDisabled} onchange="togglePaid(${d.id},this.checked,'${ym}')"></td><td>${_esc(d.notes||'—')}</td><td><div class="ac"><button class="ic e" onclick="openModal('dfixa',${d.id})">✏</button><button class="ic d" onclick="delRec('df',${d.id})">🗑</button></div></td></tr>`;
+    var _dcc = _rowCatColor(d.cat, 'fcat');
+    var _rs = (rowStyle ? rowStyle+';' : '') + '--cc:'+_dcc;
+    return `<tr style="${_rs}" data-cc="${_dcc}"><td style="${urg};font-weight:${urg?700:400}">${_esc(d.name)}${inactBadge}${autoBadge}</td><td>${catBadge('fcat',d.cat)}</td><td class="bold">${inactive?'<span style="color:var(--mut)">'+fmt(d.val)+'</span>':fmt(d.val)}</td><td style="${urg}">${d.day||'—'}</td><td>${_esc(d.card||'—')}</td><td><input type="checkbox" ${_paid?'checked':''} ${chkDisabled} onchange="togglePaid(${d.id},this.checked,'${ym}')"></td><td>${_esc(d.notes||'—')}</td><td><div class="ac"><button class="ic e" onclick="openModal('dfixa',${d.id})">✏</button><button class="ic d" onclick="delRec('df',${d.id})">🗑</button></div></td></tr>`;
   }).join('') : _emptyRow(8,'↘','Nenhuma despesa fixa','Adiciona despesas recorrentes como renda, subscrições, etc.'); })());
   var ft = document.getElementById('dfFoot');
   if (ft) ft.innerHTML = `<tr><td colspan="2">Total</td><td class="tred">${fmt(totFixas(ym))}</td><td colspan="5"></td></tr>`;
@@ -2169,8 +2188,10 @@ function renderDespesas() {
     }
     var valCls = d._src === 'parc' ? 'tpur' : d._src === 'veh' ? 'tylw' : d._src === 'fat' ? 'tblu' : 'tred';
     var notesCell = _esc(d.notes || '—');
-    return `<tr class="parc-r swipe-row" data-sid="${d.id}" data-stype="${isAuto?'':'dc'}"><td title="${fmtDate(d.date)}">${fmtDateShort(d.date)}</td><td style="font-size:.82rem">${nameCell}</td><td>${catLabel}</td><td class="${valCls}">${fmt(d.val)}</td><td>${d.card||'—'}</td><td style="font-size:.74rem">${notesCell}</td><td><div class="ac">${!isAuto?`<button class="ic e" onclick="openModal('dcorr',${d.id})">✏</button><button class="ic d" onclick="delRec('dc',${d.id})">🗑</button>`:'<span class="tmut" style="font-size:.63rem;padding:.15rem .35rem;background:var(--s2);border-radius:4px" title="Criado automaticamente — edite na aba de origem">auto</span>'}</div></td></tr>`;
+    var _dcc2 = _rowCatColor(d.cat, 'ccat');
+    return `<tr class="parc-r swipe-row" data-cc="${_dcc2}" style="--cc:${_dcc2}" data-sid="${d.id}" data-stype="${isAuto?'':'dc'}"><td title="${fmtDate(d.date)}">${fmtDateShort(d.date)}</td><td style="font-size:.82rem">${nameCell}</td><td>${catLabel}</td><td class="${valCls}">${fmt(d.val)}</td><td>${d.card||'—'}</td><td style="font-size:.74rem">${notesCell}</td><td><div class="ac">${!isAuto?`<button class="ic e" onclick="openModal('dcorr',${d.id})">✏</button><button class="ic d" onclick="delRec('dc',${d.id})">🗑</button>`:'<span class="tmut" style="font-size:.63rem;padding:.15rem .35rem;background:var(--s2);border-radius:4px" title="Criado automaticamente — edite na aba de origem">auto</span>'}</div></td></tr>`;
   }).join('') : _emptyRow(7,'📋','Nenhuma despesa em '+dcPeriodLbl,'Regista despesas variáveis com o botão +'); })());
+  _setTwTall(document.querySelector('#p-despesas .tw:last-of-type'), corrPage.length);
   _initSwipe('dcBody', 'dc');
   var dp=document.getElementById('dcPin'); if(dp) dp.classList.toggle('on',DC_PIN);
   var totV = sumVal(corr.filter(function(d){return d._src==='veh';}));
