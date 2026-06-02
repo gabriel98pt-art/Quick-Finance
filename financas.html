@@ -1805,14 +1805,12 @@ function renderDashboard() {
     ? [
         {l:'Receitas previstas',  v:rec,  c:'var(--mut)', a:'var(--mut)'},
         {l:'Despesas previstas',  v:desp, c:'var(--mut)', a:'var(--mut)'},
-        {l:'Saldo previsto',      v:sld,  c:'var(--mut)', a:'var(--mut)'},
-        {l:'Parcelas',            v:prc,  c:parcCol,      a:parcCol}
+        {l:'Saldo previsto',      v:sld,  c:'var(--mut)', a:'var(--mut)'}
       ]
     : [
         {l:'Receitas',  v:rec,  c:'var(--grn)', a:'var(--grn)'},
         {l:'Despesas',  v:desp, c:'var(--red)', a:'var(--red)'},
-        {l:isCurrentYm&&_pendente>0?'Saldo parcial':'Saldo', v:sld, c:sld>=0?'var(--grn)':'var(--red)', a:sld>=0?'var(--grn)':'var(--red)', sub:isCurrentYm&&_pendente>0?'▼ '+fmt(_pendente)+' pendente':''},
-        {l:'Parcelas',  v:prc,  c:parcCol,      a:parcCol}
+        {l:isCurrentYm&&_pendente>0?'Saldo parcial':'Saldo', v:sld, c:sld>=0?'var(--grn)':'var(--red)', a:sld>=0?'var(--grn)':'var(--red)', sub:isCurrentYm&&_pendente>0?'▼ '+fmt(_pendente)+' pendente':''}
       ];
   _renderComp(ym);
   _updateAlertBadge();
@@ -1982,10 +1980,12 @@ function renderDespesas() {
   var _dRec = totRec(ym), _dSald = _dRec - _dTot;
   var _dSaldCol = _dSald >= 0 ? 'var(--grn)' : 'var(--red)';
   var dkEl = document.getElementById('despKpis');
+  var _parcCol = (S.cfg.catColors||{})['ccat:Parcelas'] || CAT_SEMANTIC['Parcelas'] || '#f43f5e';
   if (dkEl) dkEl.innerHTML =
     `<div class="kc" style="--_a:var(--red)"><div class="klbl">Total</div><div class="kval tred">${fmt(_dTot)}</div></div>` +
     `<div class="kc" style="--_a:var(--ylw)"><div class="klbl">Fixas</div><div class="kval tylw">${fmt(_dFix)}</div></div>` +
-    `<div class="kc" style="--_a:var(--blu)"><div class="klbl">Variáveis</div><div class="kval tblu">${fmt(_dCorr)}</div></div>`;
+    `<div class="kc" style="--_a:var(--blu)"><div class="klbl">Variáveis</div><div class="kval tblu">${fmt(_dCorr)}</div></div>` +
+    `<div class="kc" style="--_a:${_parcCol}"><div class="klbl">Parcelas</div><div class="kval" style="color:${_parcCol}">${fmt(_dParc)}</div></div>`;
 
   // Fixas
   var el = document.getElementById('dfBody');
