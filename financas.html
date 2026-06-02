@@ -661,7 +661,7 @@ tr.swipe-del{background:rgba(255,84,112,.28)!important;transition:background .15
   <div class="kg mb2" id="parcKpis"></div>
   <div class="tc">
     <div class="tch">
-      <span class="slbl" style="margin:0">Parcelas</span>
+      <span class="slbl" style="margin:0">Parcelas <span id="parcAtivaBadge" style="font-size:.68rem;font-weight:600;color:var(--mut);background:var(--s2);border:1px solid var(--brd);border-radius:99px;padding:.1rem .45rem;vertical-align:middle"></span></span>
       <div class="row g2">
         <button class="btn pri sm" onclick="openModal('parc')">+ Adicionar</button>
       </div>
@@ -1820,7 +1820,7 @@ function renderDashboard() {
         return [
           {l:'Receitas',  v:rec,  c:'var(--grn)', a:'var(--grn)', tr:trendHtml(rec,prevRec,false)},
           {l:'Despesas',  v:desp, c:'var(--red)', a:'var(--red)', tr:trendHtml(desp,prevDesp,true)},
-          {l:_showPartial?'Saldo parcial':'Saldo', v:sld, c:sld>=0?'var(--grn)':'var(--red)', a:sld>=0?'var(--grn)':'var(--red)', tr:trendHtml(sld,prevSld,false)},
+          {l:_showPartial?'Saldo parcial':'Saldo', v:sld, c:sld>=0?'var(--grn)':'var(--red)', a:sld>=0?'var(--grn)':'var(--red)'},
           {l:'Pendente', v:_pendente, c:_pendCol, a:_pendCol}
         ];
       })();
@@ -1958,9 +1958,9 @@ function renderReceitas() {
   var kEl = document.getElementById('recKpis');
   if (kEl) kEl.innerHTML =
     `<div class="kc" style="--_a:var(--grn)"><div class="klbl">Total</div><div class="kval-row"><div class="kval tgrn">${fmt(mnTot)}</div>${trendHtml(mnTot,prevTot,false)}</div></div>` +
-    `<div class="kc" style="--_a:var(--blu)"><div class="klbl">Vencimento</div><div class="kval-row"><div class="kval tblu">${fmt(_recVenc)}</div>${trendHtml(_recVenc,_prevRecVenc,false)}</div></div>` +
-    `<div class="kc" style="--_a:var(--pur)"><div class="klbl">Transferências</div><div class="kval-row"><div class="kval tpur">${fmt(_trfIn)}</div>${trendHtml(_trfIn,_prevTrfIn,false)}</div></div>` +
-    `<div class="kc" style="--_a:var(--ylw)"><div class="klbl">Maior receita</div><div class="kval-row"><div class="kval tylw">${fmt(_maxRec)}</div>${trendHtml(_maxRec,_prevMaxRec,false)}</div></div>`;
+    `<div class="kc" style="--_a:var(--blu)"><div class="klbl">Vencimento</div><div class="kval tblu">${fmt(_recVenc)}</div></div>` +
+    `<div class="kc" style="--_a:var(--pur)"><div class="klbl">Transferências</div><div class="kval tpur">${fmt(_trfIn)}</div></div>` +
+    `<div class="kc" style="--_a:var(--ylw)"><div class="klbl">Maior receita</div><div class="kval tylw">${fmt(_maxRec)}</div></div>`;
 
   // Card filter populate
   var cardFiltEl = document.getElementById('recCardFilt');
@@ -2009,8 +2009,8 @@ function renderDespesas() {
   var _parcCol = (S.cfg.catColors||{})['ccat:Parcelas'] || CAT_SEMANTIC['Parcelas'] || '#f43f5e';
   if (dkEl) dkEl.innerHTML =
     `<div class="kc" style="--_a:var(--red)"><div class="klbl">Total</div><div class="kval-row"><div class="kval tred">${fmt(_dTot)}</div>${trendHtml(_dTot,_pdTot,true)}</div></div>` +
-    `<div class="kc" style="--_a:var(--ylw)"><div class="klbl">Fixas</div><div class="kval-row"><div class="kval tylw">${fmt(_dFix)}</div>${trendHtml(_dFix,_pdFix,true)}</div></div>` +
-    `<div class="kc" style="--_a:${_parcCol}"><div class="klbl">Parcelas</div><div class="kval-row"><div class="kval" style="color:${_parcCol}">${fmt(_dParc)}</div>${trendHtml(_dParc,_pdParc,true)}</div></div>` +
+    `<div class="kc" style="--_a:var(--ylw)"><div class="klbl">Fixas</div><div class="kval tylw">${fmt(_dFix)}</div></div>` +
+    `<div class="kc" style="--_a:${_parcCol}"><div class="klbl">Parcelas</div><div class="kval" style="color:${_parcCol}">${fmt(_dParc)}</div></div>` +
     `<div class="kc" style="--_a:var(--blu)"><div class="klbl">Variáveis</div><div class="kval-row"><div class="kval tblu">${fmt(_dCorr)}</div>${trendHtml(_dCorr,_pdCorr,true)}</div></div>`;
 
   // Widget — próximos pagamentos (só mês actual)
@@ -2216,8 +2216,8 @@ function renderVeiculo() {
   if (kEl) kEl.innerHTML =
     `<div class="kc" style="--_a:var(--pur)"><div class="klbl">Total</div><div class="kval-row"><div class="kval tpur">${fmt(totAll)}</div>${trendHtml(totAll,_prevAll,true)}</div></div>` +
     `<div class="kc" style="--_a:var(--ylw)"><div class="klbl">⚡ Carga</div><div class="kval-row"><div class="kval tylw">${fmt(totCg)}</div>${trendHtml(totCg,_prevCg,true)}</div></div>` +
-    `<div class="kc" style="--_a:var(--grn)"><div class="klbl">Fixas</div><div class="kval-row"><div class="kval tgrn">${fmt(totFix)}</div>${trendHtml(totFix,_prevFix,true)}</div></div>` +
-    `<div class="kc" style="--_a:var(--blu)"><div class="klbl">Variáveis</div><div class="kval-row"><div class="kval tblu">${fmt(totLp)}</div>${trendHtml(totLp,_prevLp,true)}</div></div>`;
+    `<div class="kc" style="--_a:var(--grn)"><div class="klbl">Fixas</div><div class="kval tgrn">${fmt(totFix)}</div></div>` +
+    `<div class="kc" style="--_a:var(--blu)"><div class="klbl">Variáveis</div><div class="kval tblu">${fmt(totLp)}</div></div>`;
 
   // Carga — filtered by month
   var cg = S.veh.cg.filter(function(d){return inMonth(d.date, ym);}).sort(function(a,b){return b.date>a.date?1:-1;});
@@ -2348,15 +2348,15 @@ function renderParcelas() {
   }, 0);
 
   var _parcAtivas = S.par.filter(function(p){ var ms=parcMonths(p); return ms.filter(function(m){return !p.py[m];}).length>0; }).length;
-  var _prevPym = addMonths(globalMonth,-1);
-  var _prevTotMPaid = S.par.reduce(function(s,p){ return parcMonths(p).indexOf(_prevPym)>=0 && p.py[_prevPym] ? s+p.vp : s; }, 0);
-  var _prevTotMPending = totParcMonth(_prevPym) - _prevTotMPaid;
+  var _totParc = S.par.reduce(function(s,p){ return s + p.vp * (parcMonths(p)||[]).length; }, 0);
+  var badge = document.getElementById('parcAtivaBadge');
+  if (badge) badge.textContent = _parcAtivas ? _parcAtivas + ' ativas' : '';
   var kEl = document.getElementById('parcKpis');
   if (kEl) kEl.innerHTML =
-    `<div class="kc" style="--_a:var(--grn)"><div class="klbl">Pago</div><div class="kval-row"><div class="kval tgrn">${fmt(totMPaid)}</div>${trendHtml(totMPaid,_prevTotMPaid,false)}</div></div>` +
-    `<div class="kc" style="--_a:var(--ylw)"><div class="klbl">Em aberto</div><div class="kval-row"><div class="kval tylw">${fmt(totMPending)}</div>${trendHtml(totMPending,_prevTotMPending,true)}</div></div>` +
+    `<div class="kc" style="--_a:var(--grn)"><div class="klbl">Pago</div><div class="kval tgrn">${fmt(totMPaid)}</div></div>` +
+    `<div class="kc" style="--_a:var(--ylw)"><div class="klbl">Em aberto</div><div class="kval tylw">${fmt(totMPending)}</div></div>` +
     `<div class="kc" style="--_a:var(--red)"><div class="klbl">Dívida restante</div><div class="kval tred">${fmt(totDiv)}</div></div>` +
-    `<div class="kc" style="--_a:var(--blu)"><div class="klbl">Compras activas</div><div class="kval tblu" style="font-size:1.3rem">${_parcAtivas}</div></div>`;
+    `<div class="kc" style="--_a:var(--pur)"><div class="klbl">Total compras</div><div class="kval tpur">${fmt(_totParc)}</div></div>`;
 
   var h = '';
   if (!S.par.length) {
