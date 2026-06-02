@@ -105,8 +105,18 @@ tfoot td{padding:.5rem 1rem;font-size:.8rem;font-weight:700;background:var(--s2)
 .ac{display:flex;gap:.2rem;align-items:center}
 
 /* EMPTY */
-.empty{text-align:center;padding:2rem 1rem;color:var(--mut);font-size:.8rem}
-.ei{font-size:1.8rem;display:block;margin-bottom:.4rem;opacity:.5}
+.empty{text-align:center;padding:2.5rem 1rem;color:var(--mut)}
+.ei{font-size:2.4rem;display:block;margin-bottom:.6rem;opacity:.35}
+.empty-msg{font-size:.82rem;font-weight:600;color:var(--txt);margin-bottom:.25rem}
+.empty-sub{font-size:.72rem;color:var(--mut)}
+/* ROW FADE-IN */
+@keyframes _rowIn{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:none}}
+tbody.anim tr{animation:_rowIn .18s ease both}
+tbody.anim tr:nth-child(2){animation-delay:.03s}
+tbody.anim tr:nth-child(3){animation-delay:.06s}
+tbody.anim tr:nth-child(4){animation-delay:.09s}
+tbody.anim tr:nth-child(5){animation-delay:.12s}
+tbody.anim tr:nth-child(n+6){animation-delay:.14s}
 
 /* BUTTONS */
 .btn{border:none;border-radius:var(--r-sm);cursor:pointer;font-size:.75rem;font-weight:600;padding:.38rem .9rem;transition:opacity var(--tr),transform .1s;display:inline-flex;align-items:center;gap:.3rem}
@@ -243,9 +253,12 @@ tfoot td{padding:.5rem 1rem;font-size:.8rem;font-weight:700;background:var(--s2)
 .ist-u{background:rgba(167,139,250,.2);color:var(--pur)}
 
 /* TOAST */
-.toast{position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%) translateY(80px);background:var(--s1);border:1px solid var(--brd);border-radius:10px;padding:.45rem 1rem;font-size:.75rem;font-weight:600;z-index:2000;transition:transform .25s ease;pointer-events:none;box-shadow:var(--sh)}
-.toast.on{transform:translateX(-50%) translateY(0)}
-.toast.err{border-color:rgba(255,84,112,.5);color:var(--red)}
+.toast{position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%) translateY(90px);background:var(--s1);border:1px solid var(--brd);border-left:3px solid var(--brd);border-radius:10px;padding:.5rem 1.1rem .5rem .85rem;font-size:.78rem;font-weight:600;z-index:2000;transition:transform .3s cubic-bezier(.34,1.4,.64,1),opacity .25s;pointer-events:none;box-shadow:var(--sh);opacity:0;max-width:calc(100vw - 2rem);white-space:nowrap}
+.toast.on{transform:translateX(-50%) translateY(0);opacity:1}
+.toast.t-ok{border-left-color:var(--grn)}
+.toast.t-err{border-left-color:var(--red);color:var(--red)}
+.toast.t-warn{border-left-color:var(--ylw)}
+.toast.t-info{border-left-color:var(--blu)}
 
 /* INFO BOX */
 .inf{background:rgba(77,143,255,.08);border:1px solid rgba(77,143,255,.2);border-radius:10px;padding:.75rem 1rem;font-size:.78rem;margin-bottom:1rem;line-height:1.6}
@@ -549,7 +562,7 @@ tr.swipe-del{background:rgba(255,84,112,.28)!important;transition:background .15
     </div>
     <div class="tw"><table>
       <thead><tr><th>Data</th><th>Fonte</th><th>Valor</th><th>Conta</th><th>Notas</th><th></th></tr></thead>
-      <tbody id="rBody"></tbody><tfoot id="rFoot"></tfoot>
+      <tbody id="rBody" class="anim"></tbody><tfoot id="rFoot"></tfoot>
     </table></div>
   </div>
 </div>
@@ -565,7 +578,7 @@ tr.swipe-del{background:rgba(255,84,112,.28)!important;transition:background .15
     </div>
     <div class="tw"><table>
       <thead><tr><th>Nome</th><th>Categoria</th><th>Valor</th><th title="Dia de vencimento mensal">Dia Venc.</th><th>Cartão</th><th title="Marque quando pago — não reinicia a cada mês">Pago?</th><th>Notas</th><th></th></tr></thead>
-      <tbody id="dfBody"></tbody><tfoot id="dfFoot"></tfoot>
+      <tbody id="dfBody" class="anim"></tbody><tfoot id="dfFoot"></tfoot>
     </table></div>
   </div>
   <div class="tc mb2">
@@ -600,7 +613,7 @@ tr.swipe-del{background:rgba(255,84,112,.28)!important;transition:background .15
     </div>
     <div class="tw"><table>
       <thead id="dcHead"><tr><th>Data</th><th>Nome</th><th>Categoria</th><th>Valor</th><th>Cartão</th><th>Notas</th><th></th></tr></thead>
-      <tbody id="dcBody"></tbody><tfoot id="dcFoot"></tfoot>
+      <tbody id="dcBody" class="anim"></tbody><tfoot id="dcFoot"></tfoot>
     </table><div id="dcPager" class="pgr" style="display:none"></div></div>
   </div>
 </div>
@@ -619,7 +632,7 @@ tr.swipe-del{background:rgba(255,84,112,.28)!important;transition:background .15
     </div>
     <div class="tw"><table>
       <thead><tr><th>Data</th><th>Local</th><th>kWh</th><th>Valor</th><th>Cartão</th><th>Notas</th><th></th></tr></thead>
-      <tbody id="cgBody"></tbody><tfoot id="cgFoot"></tfoot>
+      <tbody id="cgBody" class="anim"></tbody><tfoot id="cgFoot"></tfoot>
     </table></div>
   </div>
 
@@ -630,7 +643,7 @@ tr.swipe-del{background:rgba(255,84,112,.28)!important;transition:background .15
     </div>
     <div class="tw"><table>
       <thead><tr><th>Data</th><th>Categoria</th><th>Valor</th><th>Cartão</th><th>Notas</th><th></th></tr></thead>
-      <tbody id="lpBody"></tbody><tfoot id="lpFoot"></tfoot>
+      <tbody id="lpBody" class="anim"></tbody><tfoot id="lpFoot"></tfoot>
     </table></div>
   </div>
 
@@ -701,7 +714,7 @@ tr.swipe-del{background:rgba(255,84,112,.28)!important;transition:background .15
     </div>
     <div class="tw"><table>
       <thead id="ctHead"><tr><th>Data</th><th>Descrição</th><th>Tipo</th><th style="text-align:right">Valor</th><th style="text-align:right">Saldo</th></tr></thead>
-      <tbody id="ctBody"></tbody>
+      <tbody id="ctBody" class="anim"></tbody>
     </table><div id="ctPager" class="pgr" style="display:none"></div></div>
   </div>
 </div>
@@ -1103,15 +1116,40 @@ function redo() {
 // TOAST
 // ================================================================
 var _toastT;
-function showToast(msg, err) {
+function showToast(msg, type) {
   var el = document.getElementById('toast');
+  if (!el) return;
+  // backwards compat: type=true → error
+  if (type === true) type = 'error';
+  // auto-detect type from emoji prefix if not specified
+  if (!type) {
+    var m = msg || '';
+    if (/^[✓✅📌🎉↩↪]/.test(m)) type = 'ok';
+    else if (/^[⚠⚡]/.test(m) || m.indexOf('⚠') === 0) type = 'warn';
+    else if (/^[❌✕🗑]/.test(m)) type = 'err';
+    else if (/^[ℹ📋📅💡]/.test(m)) type = 'info';
+  } else if (type === 'error') type = 'err';
   el.textContent = msg;
-  el.classList.toggle('err', !!err);
-  el.classList.add('on');
+  el.className = 'toast on' + (type ? ' t-'+type : '');
   clearTimeout(_toastT);
-  _toastT = setTimeout(function() { el.classList.remove('on'); }, err ? 3000 : 2000);
+  var dur = type === 'err' ? 4000 : type === 'warn' ? 3000 : 2000;
+  _toastT = setTimeout(function() { el.classList.remove('on'); }, dur);
 }
 
+function _setAnimBody(id, html) {
+  var el = document.getElementById(id);
+  if (!el) return;
+  el.classList.remove('anim');
+  el.innerHTML = html;
+  void el.offsetWidth; // force reflow
+  el.classList.add('anim');
+}
+function _emptyRow(cols, icon, msg, sub) {
+  return '<tr><td colspan="'+cols+'"><div class="empty"><span class="ei">'+icon+'</span><div class="empty-msg">'+msg+'</div>'+(sub?'<div class="empty-sub">'+sub+'</div>':'')+'</div></td></tr>';
+}
+function _emptyDiv(icon, msg, sub) {
+  return '<div class="empty"><span class="ei">'+icon+'</span><div class="empty-msg">'+msg+'</div>'+(sub?'<div class="empty-sub">'+sub+'</div>':'')+'</div>';
+}
 function _sortArr(arr,col,dir){
   return arr.slice().sort(function(a,b){
     var av,bv;
@@ -1989,10 +2027,9 @@ function renderReceitas() {
   }).sort(function(a,b){return b.date>a.date?1:-1;});
   var tot = sumVal(rows);
 
-  var el = document.getElementById('rBody');
-  if (el) el.innerHTML = rows.length ? rows.map(function(r) {
+  _setAnimBody('rBody', rows.length ? rows.map(function(r) {
     return `<tr class="swipe-row" data-sid="${r.id}" data-stype="rec"><td title="${fmtDate(r.date)}">${fmtDateShort(r.date)}</td><td>${_esc(r.src||'')}</td><td class="tgrn bold">${fmt(r.val)}</td><td>${_esc(r.card||'—')}</td><td>${_esc(r.notes||'—')}</td><td><div class="ac"><button class="ic e" onclick="openModal('receita',${r.id})">✏</button><button class="ic d" onclick="delRec('rec',${r.id})">🗑</button></div></td></tr>`;
-  }).join('') : `<tr><td colspan="6"><div class="empty"><span class="ei">↗</span>Nenhuma receita em ${monthLabel(globalMonth)}</div></td></tr>`;
+  }).join('') : _emptyRow(6,'↗','Nenhuma receita em '+monthLabel(globalMonth),'Usa o botão + para registar uma entrada'));
   _initSwipe('rBody', 'rec');
   var rp=document.getElementById('recPin'); if(rp) rp.classList.toggle('on',REC_PIN);
   var ft = document.getElementById('rFoot');
@@ -2053,8 +2090,7 @@ function renderDespesas() {
   }
 
   // Fixas
-  var el = document.getElementById('dfBody');
-  if (el) el.innerHTML = S.df.length ? S.df.map(function(d) {
+  _setAnimBody('dfBody', (function() { return S.df.length ? S.df.map(function(d) {
     var inactive = !isActiveForYm(d, ym);
     var dy = inactive ? 999 : daysUntil(d.day);
     var _paid = isPaidInYm(d, ym);
@@ -2064,7 +2100,7 @@ function renderDespesas() {
     var autoBadge = d.autoRenew ? ' <span class="bdg" style="font-size:.58rem;background:rgba(0,212,160,.12);color:var(--grn);border:1px solid rgba(0,212,160,.25)" title="Renovação automática — não gera aviso">auto</span>' : '';
     var chkDisabled = inactive || d.autoRenew ? 'disabled' : '';
     return `<tr style="${rowStyle}"><td style="${urg};font-weight:${urg?700:400}">${_esc(d.name)}${inactBadge}${autoBadge}</td><td>${catBadge('fcat',d.cat)}</td><td class="bold">${inactive?'<span style="color:var(--mut)">'+fmt(d.val)+'</span>':fmt(d.val)}</td><td style="${urg}">${d.day||'—'}</td><td>${_esc(d.card||'—')}</td><td><input type="checkbox" ${_paid?'checked':''} ${chkDisabled} onchange="togglePaid(${d.id},this.checked,'${ym}')"></td><td>${_esc(d.notes||'—')}</td><td><div class="ac"><button class="ic e" onclick="openModal('dfixa',${d.id})">✏</button><button class="ic d" onclick="delRec('df',${d.id})">🗑</button></div></td></tr>`;
-  }).join('') : '<tr><td colspan="8"><div class="empty"><span class="ei">↘</span>Nenhuma despesa fixa</div></td></tr>';
+  }).join('') : _emptyRow(8,'↘','Nenhuma despesa fixa','Adiciona despesas recorrentes como renda, subscrições, etc.'); })());
   var ft = document.getElementById('dfFoot');
   if (ft) ft.innerHTML = `<tr><td colspan="2">Total</td><td class="tred">${fmt(totFixas(ym))}</td><td colspan="5"></td></tr>`;
 
@@ -2118,8 +2154,7 @@ function renderDespesas() {
   _setHead('dcHead',[{l:'Data',col:'date'},{l:'Nome',col:'name'},{l:'Categoria'},{l:'Valor',col:'val'},{l:'Cartão'},{l:'Notas'},{l:''}],DC_SORT,DC_DIR,'sortDC');
   var dcPages=Math.ceil(corr.length/DC_PGS)||1;DC_PG=Math.min(DC_PG,dcPages);
   var corrPage=corr.slice((DC_PG-1)*DC_PGS,DC_PG*DC_PGS);
-  var dcEl = document.getElementById('dcBody');
-  if (dcEl) dcEl.innerHTML = corrPage.length ? corrPage.map(function(d) {
+  _setAnimBody('dcBody', (function() { return corrPage.length ? corrPage.map(function(d) {
     var isAuto = !!d._src;
     var nameCell = d._src === 'fat' ? ('Cartão de Crédito '+_esc(d._fatCard||'')) : _esc(d.name || (d._src === 'parc' ? (d.notes||'').split(' — ')[0] : '') || '—');
     var catLabel;
@@ -2135,7 +2170,7 @@ function renderDespesas() {
     var valCls = d._src === 'parc' ? 'tpur' : d._src === 'veh' ? 'tylw' : d._src === 'fat' ? 'tblu' : 'tred';
     var notesCell = _esc(d.notes || '—');
     return `<tr class="parc-r swipe-row" data-sid="${d.id}" data-stype="${isAuto?'':'dc'}"><td title="${fmtDate(d.date)}">${fmtDateShort(d.date)}</td><td style="font-size:.82rem">${nameCell}</td><td>${catLabel}</td><td class="${valCls}">${fmt(d.val)}</td><td>${d.card||'—'}</td><td style="font-size:.74rem">${notesCell}</td><td><div class="ac">${!isAuto?`<button class="ic e" onclick="openModal('dcorr',${d.id})">✏</button><button class="ic d" onclick="delRec('dc',${d.id})">🗑</button>`:'<span class="tmut" style="font-size:.63rem;padding:.15rem .35rem;background:var(--s2);border-radius:4px" title="Criado automaticamente — edite na aba de origem">auto</span>'}</div></td></tr>`;
-  }).join('') : `<tr><td colspan="7"><div class="empty"><span class="ei">📋</span>Nenhuma despesa em ${dcPeriodLbl}</div></td></tr>`;
+  }).join('') : _emptyRow(7,'📋','Nenhuma despesa em '+dcPeriodLbl,'Regista despesas variáveis com o botão +'); })());
   _initSwipe('dcBody', 'dc');
   var dp=document.getElementById('dcPin'); if(dp) dp.classList.toggle('on',DC_PIN);
   var totV = sumVal(corr.filter(function(d){return d._src==='veh';}));
@@ -2231,7 +2266,7 @@ function renderVeiculo() {
   var cgEl = document.getElementById('cgBody');
   if (cgEl) cgEl.innerHTML = cg.length ? cg.map(function(d) {
     return `<tr><td title="${fmtDate(d.date)}">${fmtDateShort(d.date)}</td><td>${d.local||'—'}</td><td>${d.kwh||'—'}</td><td class="tylw bold">${fmt(d.val)}</td><td>${d.card||'—'}</td><td>${d.notes||'—'}</td><td><div class="ac"><button class="ic e" onclick="openModal('carga',${d.id})">✏</button><button class="ic d" onclick="delRec('cg',${d.id})">🗑</button></div></td></tr>`;
-  }).join('') : '<tr><td colspan="7"><div class="empty"><span class="ei">⚡</span>Nenhuma carga em '+monthLabel(ym)+'</div></td></tr>';
+  }).join('') : _emptyRow(7,'⚡','Nenhuma carga em '+monthLabel(ym),'Regista sessões de carregamento com o botão +');
   var cgFt = document.getElementById('cgFoot');
   if (cgFt) cgFt.innerHTML = `<tr><td colspan="3">Total ${monthLabel(ym)}</td><td class="tylw">${fmt(totCg)}</td><td colspan="3"></td></tr>`;
 
@@ -2239,7 +2274,7 @@ function renderVeiculo() {
   var lpEl = document.getElementById('lpBody');
   if (lpEl) lpEl.innerHTML = lp.length ? lp.map(function(d) {
     return `<tr><td title="${fmtDate(d.date)}">${fmtDateShort(d.date)}</td><td>${d.tipo||'—'}</td><td class="bold">${fmt(d.val)}</td><td>${d.card||'—'}</td><td>${d.notes||'—'}</td><td><div class="ac"><button class="ic e" onclick="openModal('limp',${d.id})">✏</button><button class="ic d" onclick="delRec('lp',${d.id})">🗑</button></div></td></tr>`;
-  }).join('') : '<tr><td colspan="6"><div class="empty"><span class="ei">🧼</span>Nenhuma limpeza em '+monthLabel(ym)+'</div></td></tr>';
+  }).join('') : _emptyRow(6,'🧼','Nenhuma limpeza em '+monthLabel(ym),'Regista lavagens e manutenções com o botão +');
   var lpFt = document.getElementById('lpFoot');
   if (lpFt) lpFt.innerHTML = `<tr><td colspan="2">Total ${monthLabel(ym)}</td><td>${fmt(totLp)}</td><td colspan="3"></td></tr>`;
 
@@ -2248,7 +2283,7 @@ function renderVeiculo() {
   var vDfEl = document.getElementById('vehDfBody');
   if (vDfEl) vDfEl.innerHTML = vdf.length ? vdf.map(function(d) {
     return `<tr><td>${d.name||'—'}</td><td>${d.cat||'—'}</td><td class="tred bold">${fmt(d.val)}</td><td>${d.day||'—'}</td><td>${d.card||'—'}</td><td style="font-size:.74rem">${d.notes||'—'}</td><td><div class="ac"><button class="ic e" onclick="openModal('vehfix',${d.id})">✏</button><button class="ic d" onclick="delRec('vehdf',${d.id})">🗑</button></div></td></tr>`;
-  }).join('') : '<tr><td colspan="7"><div class="empty"><span class="ei">📋</span>Sem despesas fixas do veículo</div></td></tr>';
+  }).join('') : _emptyRow(7,'📋','Sem despesas fixas do veículo','Adiciona seguros, portagens, impostos, etc.');
   var vDfFt = document.getElementById('vehDfFoot');
   if (vDfFt) vDfFt.innerHTML = vdf.length ? `<tr><td colspan="2">Total Fixas/mês</td><td class="tred">${fmt(totFix)}</td><td colspan="4"></td></tr>` : '';
 
@@ -2367,7 +2402,7 @@ function renderParcelas() {
 
   var h = '';
   if (!S.par.length) {
-    h += '<div class="empty"><span class="ei">💳</span>Nenhuma parcela registada</div>';
+    h += _emptyDiv('💳','Nenhuma parcela registada','Adiciona compras a prestações com o botão +');
     document.getElementById('parcContent').innerHTML = h;
     return;
   }
@@ -2448,7 +2483,7 @@ function renderParcelas() {
   if (activePar.length) {
     h += buildParcTable(activePar, false);
   } else {
-    h += '<div class="empty" style="padding:1.5rem"><span class="ei">✅</span>Todas as parcelas estão concluídas</div>';
+    h += _emptyDiv('✅','Todas as parcelas concluídas','Não há prestações em aberto');
   }
 
   // Completed parcelas — collapsible section
