@@ -96,6 +96,8 @@ thead th.sth{cursor:pointer;user-select:none}thead th.sth:hover{color:var(--fg)}
 .pgr button{background:var(--s1);border:1px solid var(--brd);border-radius:var(--r-sm);cursor:pointer;color:var(--fg);font-size:.72rem;padding:.2rem .6rem;font-weight:600}
 .pgr button:disabled{opacity:.3;cursor:default}.pgr span{font-weight:700;color:var(--fg)}
 tbody td{padding:.55rem 1rem;border-bottom:1px solid var(--brd);font-size:.8rem}
+body.compact tbody td{padding:.22rem .6rem;font-size:.75rem}
+body.compact tfoot td{padding:.22rem .6rem}
 tbody tr:last-child td{border-bottom:none}
 tbody tr:nth-child(even){background:rgba(128,128,255,.03)}
 tbody tr:hover{background:var(--s2)!important}
@@ -445,6 +447,7 @@ tr.swipe-del{background:rgba(255,84,112,.28)!important;transition:background .15
         <button class="hdr-more-item" onclick="syncSave();_hdrMoreClose()">📤 <span style="color:var(--mut);font-size:.72rem">Guardar cópia</span></button>
         <button class="hdr-more-item" onclick="exportPDF();_hdrMoreClose()">🖨 <span style="color:var(--mut);font-size:.72rem">Exportar PDF</span></button>
         <div style="height:1px;background:var(--brd);margin:.2rem 0"></div>
+        <button class="hdr-more-item" id="compactMenuItem" onclick="toggleCompact();_hdrMoreClose()"></button>
         <button class="hdr-more-item" id="themeMenuItem" onclick="toggleTheme();_hdrMoreClose()"></button>
       </div>
     </div>
@@ -553,6 +556,7 @@ tr.swipe-del{background:rgba(255,84,112,.28)!important;transition:background .15
 <!-- DESPESAS -->
 <div class="pnl" id="p-despesas">
   <div class="kg mb2" id="despKpis"></div>
+  <div id="despProx"></div>
   <div class="tc mb2">
     <div class="tch">
       <span class="slbl" style="margin:0">Despesas Fixas</span>
@@ -1813,11 +1817,12 @@ function renderDashboard() {
         var _showPartial = isCurrentYm && _pendente>0 && !_monthClosed;
         var _poupPct = rec>0 ? Math.round(sld/rec*100) : 0;
         var _poupCol = _poupPct>=20?'var(--grn)':_poupPct>=0?'var(--ylw)':'var(--red)';
+        var _prevPoupPct = prevRec>0 ? Math.round(prevSld/prevRec*100) : 0;
         return [
-          {l:'Receitas',  v:rec,  c:'var(--grn)', a:'var(--grn)'},
-          {l:'Despesas',  v:desp, c:'var(--red)', a:'var(--red)', sub:_showPartial?'▼ '+fmt(_pendente)+' pendente':''},
-          {l:_showPartial?'Saldo parcial':'Saldo', v:sld, c:sld>=0?'var(--grn)':'var(--red)', a:sld>=0?'var(--grn)':'var(--red)'},
-          {l:'Poupança', v:_poupPct+'%', c:_poupCol, a:_poupCol, raw:true}
+          {l:'Receitas',  v:rec,  c:'var(--grn)', a:'var(--grn)', tr:trendHtml(rec,prevRec,false)},
+          {l:'Despesas',  v:desp, c:'var(--red)', a:'var(--red)', sub:_showPartial?'▼ '+fmt(_pendente)+' pendente':'', tr:trendHtml(desp,prevDesp,true)},
+          {l:_showPartial?'Saldo parcial':'Saldo', v:sld, c:sld>=0?'var(--grn)':'var(--red)', a:sld>=0?'var(--grn)':'var(--red)', tr:trendHtml(sld,prevSld,false)},
+          {l:'Poupança', v:_poupPct+'%', c:_poupCol, a:_poupCol, raw:true, tr:trendHtml(_poupPct,_prevPoupPct,false)}
         ];
       })();
   _renderComp(ym);
@@ -1832,7 +1837,7 @@ function renderDashboard() {
       var valStr = k.raw ? k.v : fmt(k.v);
       var fs = valStr.length > 9 ? '1rem' : valStr.length > 7 ? '1.1rem' : '1.2rem';
       var subHtml = k.sub ? `<div style="font-size:.6rem;color:var(--ylw);margin-top:.15rem">${k.sub}</div>` : '';
-      return `<div class="kc" style="--_a:${k.a};${isFutureYm?'opacity:.6':''}"><div class="klbl">${k.l}</div><div class="kval" style="color:${k.c};font-size:${fs}">${valStr}</div>${subHtml}</div>`;
+      return `<div class="kc" style="--_a:${k.a};${isFutureYm?'opacity:.6':''}"><div class="klbl">${k.l}</div><div class="kval" style="color:${k.c};font-size:${fs}">${valStr}</div>${subHtml}${k.tr||''}</div>`;
     }).join('');
   }
 
@@ -1951,12 +1956,15 @@ function renderReceitas() {
   // Maior receita
   var _maxRec = mnRecs.length ? Math.max.apply(null, mnRecs.map(function(r){return r.val;})) : 0;
 
+  var _prevTrfIn = sumVal((S.trf||[]).filter(function(t){ return inMonth(t.date, prevYm); }));
+  var _prevMnRecs = S.rec.filter(function(r){ return r.date && r.date.startsWith(prevYm); });
+  var _prevMaxRec = _prevMnRecs.length ? Math.max.apply(null, _prevMnRecs.map(function(r){return r.val;})) : 0;
   var kEl = document.getElementById('recKpis');
   if (kEl) kEl.innerHTML =
-    `<div class="kc" style="--_a:var(--grn)"><div class="klbl">Total</div><div class="kval tgrn">${fmt(mnTot)}</div></div>` +
+    `<div class="kc" style="--_a:var(--grn)"><div class="klbl">Total</div><div class="kval tgrn">${fmt(mnTot)}</div>${trendHtml(mnTot,prevTot,false)}</div>` +
     `<div class="kc" style="--_a:var(--blu)"><div class="klbl">Próximo</div><div class="kval tblu" style="font-size:1.1rem">${_nextRecDate}</div></div>` +
-    `<div class="kc" style="--_a:var(--pur)"><div class="klbl">Transferências</div><div class="kval tpur">${fmt(_trfIn)}</div></div>` +
-    `<div class="kc" style="--_a:var(--ylw)"><div class="klbl">Maior receita</div><div class="kval tylw">${fmt(_maxRec)}</div></div>`;
+    `<div class="kc" style="--_a:var(--pur)"><div class="klbl">Transferências</div><div class="kval tpur">${fmt(_trfIn)}</div>${trendHtml(_trfIn,_prevTrfIn,false)}</div>` +
+    `<div class="kc" style="--_a:var(--ylw)"><div class="klbl">Maior receita</div><div class="kval tylw">${fmt(_maxRec)}</div>${trendHtml(_maxRec,_prevMaxRec,false)}</div>`;
 
   // Card filter populate
   var cardFiltEl = document.getElementById('recCardFilt');
@@ -1998,15 +2006,49 @@ function renderDespesas() {
   // KPIs topo
   var _dFix = totFixas(ym), _dCorr = totCorrManual(ym), _dParc = totParcMonth(ym), _dVeh = totVeh(ym);
   var _dTot = _dFix + _dCorr + _dParc + _dVeh;
-  var _dRec = totRec(ym), _dSald = _dRec - _dTot;
-  var _dSaldCol = _dSald >= 0 ? 'var(--grn)' : 'var(--red)';
+  var _prevDym = addMonths(ym,-1);
+  var _pdFix = totFixas(_prevDym), _pdCorr = totCorrManual(_prevDym), _pdParc = totParcMonth(_prevDym);
+  var _pdTot = totDesp(_prevDym);
   var dkEl = document.getElementById('despKpis');
   var _parcCol = (S.cfg.catColors||{})['ccat:Parcelas'] || CAT_SEMANTIC['Parcelas'] || '#f43f5e';
   if (dkEl) dkEl.innerHTML =
-    `<div class="kc" style="--_a:var(--red)"><div class="klbl">Total</div><div class="kval tred">${fmt(_dTot)}</div></div>` +
-    `<div class="kc" style="--_a:var(--ylw)"><div class="klbl">Fixas</div><div class="kval tylw">${fmt(_dFix)}</div></div>` +
-    `<div class="kc" style="--_a:${_parcCol}"><div class="klbl">Parcelas</div><div class="kval" style="color:${_parcCol}">${fmt(_dParc)}</div></div>` +
-    `<div class="kc" style="--_a:var(--blu)"><div class="klbl">Variáveis</div><div class="kval tblu">${fmt(_dCorr)}</div></div>`;
+    `<div class="kc" style="--_a:var(--red)"><div class="klbl">Total</div><div class="kval tred">${fmt(_dTot)}</div>${trendHtml(_dTot,_pdTot,true)}</div>` +
+    `<div class="kc" style="--_a:var(--ylw)"><div class="klbl">Fixas</div><div class="kval tylw">${fmt(_dFix)}</div>${trendHtml(_dFix,_pdFix,true)}</div>` +
+    `<div class="kc" style="--_a:${_parcCol}"><div class="klbl">Parcelas</div><div class="kval" style="color:${_parcCol}">${fmt(_dParc)}</div>${trendHtml(_dParc,_pdParc,true)}</div>` +
+    `<div class="kc" style="--_a:var(--blu)"><div class="klbl">Variáveis</div><div class="kval tblu">${fmt(_dCorr)}</div>${trendHtml(_dCorr,_pdCorr,true)}</div>`;
+
+  // Widget — próximos pagamentos (só mês actual)
+  var proxEl = document.getElementById('despProx');
+  if (proxEl) {
+    var _isNowYm = ym === todayStr().slice(0,7);
+    if (_isNowYm) {
+      var _todDay = parseInt(todayStr().slice(8));
+      var _proxItems = [];
+      S.df.forEach(function(d) {
+        if (!isActiveForYm(d,ym) || isPaidInYm(d,ym)) return;
+        var dy = d.day - _todDay;
+        if (dy >= 0 && dy <= 14) _proxItems.push({name:d.name, val:d.val, dy:dy, tipo:'fixa'});
+      });
+      S.par.forEach(function(p) {
+        if (parcMonths(p).indexOf(ym) < 0 || p.py[ym]) return;
+        _proxItems.push({name:p.name, val:p.vp, dy:null, tipo:'parcela'});
+      });
+      _proxItems.sort(function(a,b){ return (a.dy===null?99:a.dy)-(b.dy===null?99:b.dy); });
+      if (_proxItems.length) {
+        var _px = _proxItems.slice(0,6).map(function(i){
+          var badge = i.tipo==='fixa'
+            ? (i.dy===0?'<span style="color:var(--red);font-weight:700">hoje</span>':i.dy===1?'<span style="color:var(--ylw)">amanhã</span>':'<span style="color:var(--mut)">'+i.dy+'d</span>')
+            : '<span style="color:var(--mut)">parcela</span>';
+          return `<div style="display:flex;align-items:center;justify-content:space-between;padding:.4rem .75rem;border-bottom:1px solid var(--brd);font-size:.78rem"><span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${_esc(i.name)}</span><span style="margin:0 .6rem">${badge}</span><span style="font-weight:700;color:var(--red);white-space:nowrap">${fmt(i.val)}</span></div>`;
+        }).join('');
+        proxEl.innerHTML = `<div class="tc mb2"><div class="tch"><span class="slbl" style="margin:0">⏰ Próximos pagamentos</span></div>${_px}</div>`;
+      } else {
+        proxEl.innerHTML = '';
+      }
+    } else {
+      proxEl.innerHTML = '';
+    }
+  }
 
   // Fixas
   var el = document.getElementById('dfBody');
@@ -2169,12 +2211,17 @@ function renderVeiculo() {
   var km = S.cfg.kmMensal || 0;
   var custKm = km > 0 ? fmt(Math.round(totAll/km*100)/100)+'/km' : '—';
 
+  var _prevVym = addMonths(ym,-1);
+  var _prevCg  = sumVal(S.veh.cg.filter(function(d){ return inMonth(d.date,_prevVym); }));
+  var _prevLp  = sumVal(S.veh.lp.filter(function(d){ return inMonth(d.date,_prevVym); }));
+  var _prevFix = sumVal((S.veh.df||[]).filter(function(d){ return isActiveForYm(d,_prevVym); }));
+  var _prevAll = _prevCg + _prevLp + _prevFix;
   var kEl = document.getElementById('vehKpis');
   if (kEl) kEl.innerHTML =
-    `<div class="kc" style="--_a:var(--pur)"><div class="klbl">Total</div><div class="kval tpur">${fmt(totAll)}</div></div>` +
-    `<div class="kc" style="--_a:var(--ylw)"><div class="klbl">⚡ Carga</div><div class="kval tylw">${fmt(totCg)}</div></div>` +
-    `<div class="kc" style="--_a:var(--grn)"><div class="klbl">Fixas</div><div class="kval tgrn">${fmt(totFix)}</div></div>` +
-    `<div class="kc" style="--_a:var(--blu)"><div class="klbl">Variáveis</div><div class="kval tblu">${fmt(totLp)}</div></div>`;
+    `<div class="kc" style="--_a:var(--pur)"><div class="klbl">Total</div><div class="kval tpur">${fmt(totAll)}</div>${trendHtml(totAll,_prevAll,true)}</div>` +
+    `<div class="kc" style="--_a:var(--ylw)"><div class="klbl">⚡ Carga</div><div class="kval tylw">${fmt(totCg)}</div>${trendHtml(totCg,_prevCg,true)}</div>` +
+    `<div class="kc" style="--_a:var(--grn)"><div class="klbl">Fixas</div><div class="kval tgrn">${fmt(totFix)}</div>${trendHtml(totFix,_prevFix,true)}</div>` +
+    `<div class="kc" style="--_a:var(--blu)"><div class="klbl">Variáveis</div><div class="kval tblu">${fmt(totLp)}</div>${trendHtml(totLp,_prevLp,true)}</div>`;
 
   // Carga — filtered by month
   var cg = S.veh.cg.filter(function(d){return inMonth(d.date, ym);}).sort(function(a,b){return b.date>a.date?1:-1;});
@@ -2305,10 +2352,13 @@ function renderParcelas() {
   }, 0);
 
   var _parcAtivas = S.par.filter(function(p){ var ms=parcMonths(p); return ms.filter(function(m){return !p.py[m];}).length>0; }).length;
+  var _prevPym = addMonths(globalMonth,-1);
+  var _prevTotMPaid = S.par.reduce(function(s,p){ return parcMonths(p).indexOf(_prevPym)>=0 && p.py[_prevPym] ? s+p.vp : s; }, 0);
+  var _prevTotMPending = totParcMonth(_prevPym) - _prevTotMPaid;
   var kEl = document.getElementById('parcKpis');
   if (kEl) kEl.innerHTML =
-    `<div class="kc" style="--_a:var(--grn)"><div class="klbl">Pago</div><div class="kval tgrn">${fmt(totMPaid)}</div></div>` +
-    `<div class="kc" style="--_a:var(--ylw)"><div class="klbl">Em aberto</div><div class="kval tylw">${fmt(totMPending)}</div></div>` +
+    `<div class="kc" style="--_a:var(--grn)"><div class="klbl">Pago</div><div class="kval tgrn">${fmt(totMPaid)}</div>${trendHtml(totMPaid,_prevTotMPaid,false)}</div>` +
+    `<div class="kc" style="--_a:var(--ylw)"><div class="klbl">Em aberto</div><div class="kval tylw">${fmt(totMPending)}</div>${trendHtml(totMPending,_prevTotMPending,true)}</div>` +
     `<div class="kc" style="--_a:var(--red)"><div class="klbl">Dívida restante</div><div class="kval tred">${fmt(totDiv)}</div></div>` +
     `<div class="kc" style="--_a:var(--blu)"><div class="klbl">Compras activas</div><div class="kval tblu" style="font-size:1.3rem">${_parcAtivas}</div></div>`;
 
@@ -5624,6 +5674,19 @@ function _applyFont() {
   _applyFont();
 })();
 
+var _compact = localStorage.getItem('_compact') === '1';
+(function(){ if (_compact) document.body.classList.add('compact'); })();
+function toggleCompact() {
+  _compact = !_compact;
+  document.body.classList.toggle('compact', _compact);
+  try { localStorage.setItem('_compact', _compact ? '1' : '0'); } catch(e) {}
+  _updateCompactBtn();
+}
+function _updateCompactBtn() {
+  var btn = document.getElementById('compactMenuItem');
+  if (btn) btn.innerHTML = (_compact ? '⊟' : '⊞') + ' <span style="color:var(--mut);font-size:.72rem">' + (_compact ? 'Tabela normal' : 'Tabela compacta') + '</span>';
+}
+
 function _updateThemeBtn() {
   var isDark = document.documentElement.dataset.theme === 'dark';
   var btn = document.getElementById('themeBtn');
@@ -6246,6 +6309,7 @@ document.addEventListener('keydown', function(e) {
     document.documentElement.dataset.theme = (S.cfg && S.cfg.theme) || 'dark';
     applyColors();
     _updateThemeBtn();
+    _updateCompactBtn();
     HIST.push(JSON.stringify(S));
     HIDX = 0;
     updateUR();
