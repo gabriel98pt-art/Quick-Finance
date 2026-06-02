@@ -639,46 +639,56 @@ tr.swipe-del{background:rgba(255,84,112,.28)!important;transition:background .15
     <div class="tch">
       <span class="slbl" style="margin:0">⚡ Carga Elétrica</span>
       <div class="row g2">
-
+        <button class="ic tip" id="eyeBtn_cg" data-tip="Mostrar/esconder" onclick="_toggleVis('cgCollapse','eyeBtn_cg')" style="font-size:.8rem;width:28px;height:28px"></button>
         <button class="btn pri sm" onclick="openModal('carga')">+ Adicionar</button>
       </div>
     </div>
-    <div class="tw"><table>
+    <div id="cgCollapse"><div class="tw"><table>
       <thead><tr><th>Data</th><th>Local</th><th>kWh</th><th>Valor</th><th>Cartão</th><th>Notas</th><th></th></tr></thead>
       <tbody id="cgBody" class="anim"></tbody><tfoot id="cgFoot"></tfoot>
-    </table></div>
+    </table></div></div>
   </div>
 
   <div class="tc mb2">
     <div class="tch">
       <span class="slbl" style="margin:0">🚘 Despesas do Veículo</span>
-      <button class="btn pri sm" onclick="openModal('limp')">+ Adicionar</button>
+      <div class="row g2">
+        <button class="ic tip" id="eyeBtn_lp" data-tip="Mostrar/esconder" onclick="_toggleVis('lpCollapse','eyeBtn_lp')" style="font-size:.8rem;width:28px;height:28px"></button>
+        <button class="btn pri sm" onclick="openModal('limp')">+ Adicionar</button>
+      </div>
     </div>
-    <div class="tw"><table>
+    <div id="lpCollapse"><div class="tw"><table>
       <thead><tr><th>Data</th><th>Categoria</th><th>Valor</th><th>Cartão</th><th>Notas</th><th></th></tr></thead>
       <tbody id="lpBody" class="anim"></tbody><tfoot id="lpFoot"></tfoot>
-    </table></div>
+    </table></div></div>
   </div>
 
   <div class="tc mb2">
     <div class="tch">
       <span class="slbl" style="margin:0">📋 Despesas Fixas do Veículo</span>
-      <button class="btn pri sm" onclick="openModal('vehfix')">+ Adicionar</button>
+      <div class="row g2">
+        <button class="ic tip" id="eyeBtn_vehDf" data-tip="Mostrar/esconder" onclick="_toggleVis('vehDfCollapse','eyeBtn_vehDf')" style="font-size:.8rem;width:28px;height:28px"></button>
+        <button class="btn pri sm" onclick="openModal('vehfix')">+ Adicionar</button>
+      </div>
     </div>
-    <div class="tw"><table>
+    <div id="vehDfCollapse"><div class="tw"><table>
       <thead><tr><th>Nome</th><th>Categoria</th><th>Valor/mês</th><th>Dia</th><th>Cartão</th><th>Notas</th><th></th></tr></thead>
       <tbody id="vehDfBody"></tbody><tfoot id="vehDfFoot"></tfoot>
-    </table></div>
+    </table></div></div>
   </div>
 
   <div class="tc">
-    <div class="tch"><span class="slbl" style="margin:0">📋 Em Despesas Correntes (automático)</span>
-      <span class="tmut" style="font-size:.72rem">entradas automáticas ao adicionar registos</span>
+    <div class="tch">
+      <span class="slbl" style="margin:0">📋 Em Despesas Correntes (automático)</span>
+      <div class="row g2">
+        <button class="ic tip" id="eyeBtn_vehDc" data-tip="Mostrar/esconder" onclick="_toggleVis('vehDcCollapse','eyeBtn_vehDc')" style="font-size:.8rem;width:28px;height:28px"></button>
+        <span class="tmut" style="font-size:.72rem">entradas automáticas</span>
+      </div>
     </div>
-    <div class="tw"><table>
+    <div id="vehDcCollapse"><div class="tw"><table>
       <thead><tr><th>Data</th><th>Categoria</th><th>Valor</th><th>Cartão</th><th>Notas</th></tr></thead>
       <tbody id="vehDcBody"></tbody><tfoot id="vehDcFoot"></tfoot>
-    </table></div>
+    </table></div></div>
   </div>
 </div>
 
@@ -1166,10 +1176,17 @@ function _applyVis(contentId, btnId) {
   var btn = btnId ? document.getElementById(btnId) : null;
   if (btn) btn.innerHTML = vis ? _EYE_O : _EYE_C;
 }
+var _VIS_SECTIONS = [
+  ['dfCollapse','eyeBtn_df'],
+  ['dcCollapse','eyeBtn_dc'],
+  ['cgCollapse','eyeBtn_cg'],
+  ['lpCollapse','eyeBtn_lp'],
+  ['vehDfCollapse','eyeBtn_vehDf'],
+  ['vehDcCollapse','eyeBtn_vehDc'],
+  ['parcContent','eyeBtn_parc']
+];
 function _applyAllVis() {
-  [['dfCollapse','eyeBtn_df'],['dcCollapse','eyeBtn_dc'],['parcContent','eyeBtn_parc']].forEach(function(p){
-    _applyVis(p[0], p[1]);
-  });
+  _VIS_SECTIONS.forEach(function(p){ _applyVis(p[0], p[1]); });
 }
 function _toggleProx() {
   var hidden = localStorage.getItem('_proxH') === '1';
@@ -2358,6 +2375,7 @@ function renderVeiculo() {
   }).join(''):'<tr><td colspan="5"><div class="empty" style="padding:1rem"><span>Nenhum registo automático — adicione carga ou limpeza</span></div></td></tr>';
   var vDcFt=document.getElementById('vehDcFoot');
   if(vDcFt) vDcFt.innerHTML=`<tr><td colspan="2">Total Veículo em Despesas</td><td class="tylw">${fmt(totAll)}</td><td colspan="2"></td></tr>`;
+  _applyAllVis();
 }
 
 // ================================================================
