@@ -2023,8 +2023,7 @@ function renderDashboard() {
   // Savings
   var goal = S.cfg.sgoal || 500;
   var pct2 = goal > 0 ? Math.min(100, Math.round(sld/goal*100)) : 0;
-  var sc = sld>=goal?'var(--grn)':sld>=goal*.7?'var(--ylw)':'var(--red)';
-  var ss = sld>=goal?'✅ Atingido':sld>=goal*.7?'🟡 No Caminho':'🔴 Abaixo';
+  var sc = sld >= goal ? 'var(--grn)' : 'var(--red)';
   var _remain = goal - sld;
   var _isClosed = !isCurrentYm || _monthClosed;
   var _savBadge, _savBadgeCls;
@@ -3135,15 +3134,22 @@ function renderMetas() {
   var ym = globalMonth;
   var rec = totRec(ym), desp = totDesp(ym), sld = rec - desp, goal = S.cfg.sgoal || 500;
   var pct = goal>0?Math.min(100,Math.round(sld/goal*100)):0;
-  var sc = sld>=goal?'var(--grn)':sld>=goal*.7?'var(--ylw)':'var(--red)';
+  var sc = sld >= goal ? 'var(--grn)' : 'var(--red)';
+  var _curYmM = currentYm(), _todDayM = parseInt(todayStr().slice(8));
+  var _lastDayM = new Date(parseInt(_curYmM.slice(0,4)), parseInt(_curYmM.slice(5,7)), 0).getDate();
+  var _isCurrentYmM = ym === _curYmM, _isClosedM = !_isCurrentYmM || _todDayM >= _lastDayM;
+  var _mBadge = _isClosedM
+    ? (sld >= goal ? '✅ Atingido' : '❌ Não atingido')
+    : (sld >= goal ? '🟢 Na meta'  : '🔴 Fora da meta');
+  var _mBadgeCls = sld >= goal ? 'gg' : 'gr';
   var ms = document.getElementById('metaSav');
   if (ms) ms.innerHTML = `
     <div class="slbl">Meta de Poupança — ${monthLabelFull(ym)}</div>
     <div class="row g2 wrap mb1">
       <span style="font-size:1.7rem;font-weight:800;color:${sc}">${fmt(sld)}</span>
-      <span class="bdg ${sld>=goal?'gg':sld>=goal*.7?'gy':'gr'}" style="font-size:.8rem;padding:.3rem .75rem">${sld>=goal?'✅ Atingido':sld>=goal*.7?'🟡 No Caminho':'🔴 Abaixo'}</span>
+      <span class="bdg ${_mBadgeCls}" style="font-size:.8rem;padding:.3rem .75rem">${_mBadge}</span>
     </div>
-    <div class="tmut" style="font-size:.75rem;margin-bottom:.6rem">Meta: ${fmt(goal)} · ${pct}% atingido</div>
+    <div class="tmut" style="font-size:.75rem;margin-bottom:.6rem">Meta: ${fmt(goal)} · ${pct}%</div>
     <div class="pb" style="height:10px"><div class="pf" style="width:${pct}%;background:${sc}"></div></div>`;
 
   var months = getLast(12, ym);
