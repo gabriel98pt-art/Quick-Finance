@@ -230,7 +230,7 @@ tbody.anim tr:nth-child(n+6){animation-delay:.14s}
 .cagrid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
 .cahdr{text-align:center;padding:.3rem;font-size:.62rem;font-weight:700;color:var(--mut);text-transform:uppercase}
 .caday{background:var(--s2);border-radius:7px;min-height:66px;padding:.28rem;font-size:.68rem;border:1px solid transparent}
-.caday.om{opacity:.25}.caday.td{border-color:var(--blu)}
+.caday.om{opacity:.4}.caday.td{border-color:var(--blu)}
 .cadn{font-weight:700;margin-bottom:.15rem;font-size:.7rem}
 .caev{border-radius:3px;padding:.07rem .25rem;font-size:.55rem;font-weight:600;margin-bottom:.07rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .evg{background:rgba(0,212,160,.2);color:var(--grn)}
@@ -440,6 +440,19 @@ tr.swipe-del{background:rgba(255,84,112,.28)!important;transition:background .15
 /* iOS install banner */
 .ios-install{background:var(--s2);border-bottom:1px solid var(--brd);padding:.55rem 1rem;display:flex;align-items:center;gap:.6rem;font-size:.75rem}
 .ios-install button{background:none;border:none;color:var(--mut);cursor:pointer;font-size:.9rem;margin-left:auto;padding:.1rem .3rem}
+/* calendar legend */
+.cal-legend{display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:.6rem}
+/* calendar overflow indicator */
+.caev-more{border-radius:3px;padding:.07rem .3rem;font-size:.52rem;font-weight:700;margin-bottom:.07rem;background:var(--s3);color:var(--mut)}
+/* weekend subtle tint */
+.caday.wknd{background:rgba(100,100,200,.05)}
+/* today day number */
+.caday.td .cadn{color:var(--blu);font-weight:800}
+/* card KPI header row */
+.kc-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:.35rem;width:100%}
+/* fund card header row */
+.fcard-hdr{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:.2rem;gap:.35rem;flex-wrap:wrap}
+
 /* print */
 @media print{
   .hdr,.tabs,.nav-bar,.fab,.ios-install,button,.ib,.tb,.sep,#backupAlert,.srch-bar,#dAlerts,.tch button,.ic{display:none!important}
@@ -560,10 +573,8 @@ tr.swipe-del{background:rgba(255,84,112,.28)!important;transition:background .15
 
 <!-- RECEITAS -->
 <div class="pnl" id="p-receitas">
-  <div class="nav-pair">
-    <select class="sel" id="recSrcFilt" onchange="renderReceitas()" style="min-width:130px"><option value="all">Todas as fontes</option></select>
-  </div>
   <div class="kg mb2" id="recKpis"></div>
+  <div class="cc mb2" id="recMiniChart" style="display:none"><div class="slbl">Evolução — últimos 6 meses</div><canvas id="chRecMini" style="max-height:130px"></canvas></div>
   <div class="tc">
     <div class="tch">
       <span class="slbl" style="margin:0">Registos</span>
@@ -571,6 +582,7 @@ tr.swipe-del{background:rgba(255,84,112,.28)!important;transition:background .15
     </div>
     <div class="srch-bar">
       <input id="recSearch" type="search" placeholder="🔍 Pesquisar…" oninput="REC_SEARCH=this.value;renderReceitas()" value="">
+      <select id="recSrcFilt" onchange="renderReceitas()"><option value="all">Todas as fontes</option></select>
       <select id="recCardFilt" onchange="REC_CARD=this.value;renderReceitas()"><option value="all">Todas as contas</option></select>
       <button class="srch-pin" id="recPin" onclick="_togglePin('rec')" title="Manter filtro ao mudar de mês">📌</button>
       <button class="srch-clr" onclick="REC_SEARCH='';REC_CARD='all';document.getElementById('recSearch').value='';renderReceitas()" title="Limpar filtros">✕</button>
@@ -717,7 +729,14 @@ tr.swipe-del{background:rgba(255,84,112,.28)!important;transition:background .15
 
 <!-- CALENDÁRIO -->
 <div class="pnl" id="p-cal">
-  <div class="cc mb2"><div class="cagrid" id="calGrid"></div></div>
+  <div class="cc mb2">
+    <div class="cal-legend">
+      <span class="caev evg" style="font-size:.65rem;padding:.12rem .5rem">Receita</span>
+      <span class="caev evr" style="font-size:.65rem;padding:.12rem .5rem">Despesa / Parcela</span>
+      <span class="caev evb" style="font-size:.65rem;padding:.12rem .5rem">Evento</span>
+    </div>
+    <div class="cagrid" id="calGrid"></div>
+  </div>
   <div class="tc">
     <div class="tch">
       <span class="slbl" style="margin:0">Eventos Personalizados</span>
@@ -732,8 +751,9 @@ tr.swipe-del{background:rgba(255,84,112,.28)!important;transition:background .15
 
 <!-- CARTÕES -->
 <div class="pnl" id="p-cartoes">
+  <div class="kg mb1" id="ctSummaryKpis"></div>
   <div class="kg mb2" id="ctCards"></div>
-  <div class="cc mb2"><div class="slbl">Gastos por Cartão</div><canvas id="chCt" style="height:190px"></canvas></div>
+  <div class="cc mb2"><div class="slbl">Gastos por Cartão</div><canvas id="chCt"></canvas></div>
   <div class="tc">
     <div class="tch">
       <span class="slbl" style="margin:0">Fluxo Consolidado</span>
@@ -753,6 +773,7 @@ tr.swipe-del{background:rgba(255,84,112,.28)!important;transition:background .15
 
 <!-- METAS -->
 <div class="pnl" id="p-metas">
+  <div class="kg mb2" id="metaKpis"></div>
   <div class="cc mb2" id="metaSav"></div>
   <div class="tc mb2"><div class="tch"><span class="slbl" style="margin:0">Resumo Anual</span></div><div class="tw" id="annT"></div></div>
   <div class="cc mb2"><div class="slbl">Anual</div><canvas id="chAnn" style="height:190px"></canvas></div>
@@ -2204,9 +2225,20 @@ function renderReceitas() {
   var kEl = document.getElementById('recKpis');
   if (kEl) kEl.innerHTML =
     `<div class="kc" style="--_a:var(--grn)"><div class="klbl">Total</div><div class="kval-row"><div class="kval tgrn">${fmt(mnTot)}</div>${trendHtml(mnTot,prevTot,false)}</div></div>` +
-    `<div class="kc" style="--_a:var(--blu)"><div class="klbl">Vencimento</div><div class="kval tblu">${fmt(_recVenc)}</div></div>` +
-    `<div class="kc" style="--_a:var(--pur)"><div class="klbl">Transferências</div><div class="kval tpur">${fmt(_trfIn)}</div></div>` +
-    `<div class="kc" style="--_a:var(--ylw)"><div class="klbl">Maior receita</div><div class="kval tylw">${fmt(_maxRec)}</div></div>`;
+    `<div class="kc" style="--_a:var(--blu)"><div class="klbl">Vencimento</div><div class="kval-row"><div class="kval tblu">${fmt(_recVenc)}</div>${trendHtml(_recVenc,_prevRecVenc,false)}</div></div>` +
+    `<div class="kc" style="--_a:var(--pur)"><div class="klbl">Transferências</div><div class="kval-row"><div class="kval tpur">${fmt(_trfIn)}</div>${trendHtml(_trfIn,_prevTrfIn,false)}</div></div>` +
+    `<div class="kc" style="--_a:var(--ylw)"><div class="klbl">Maior receita</div><div class="kval-row"><div class="kval tylw">${fmt(_maxRec)}</div>${trendHtml(_maxRec,_prevMaxRec,false)}</div></div>`;
+
+  // Mini 6-month evolution chart (R2)
+  var _miniEl = document.getElementById('recMiniChart');
+  var _last6 = getLast(6, globalMonth);
+  var _hasRecData = _last6.some(function(m){ return totRec(m) > 0; });
+  if (_miniEl) {
+    _miniEl.style.display = _hasRecData ? '' : 'none';
+    if (_hasRecData) makeChart('chRecMini','bar',_last6.map(monthLabel),[
+      {label:'Receitas',data:_last6.map(totRec),backgroundColor:'rgba(0,212,160,.18)',borderColor:'#00d4a0',borderWidth:2,borderRadius:4,borderSkipped:false}
+    ],{noLegend:true});
+  }
 
   // Card filter populate
   var cardFiltEl = document.getElementById('recCardFilt');
@@ -2231,7 +2263,7 @@ function renderReceitas() {
 
   _setAnimBody('rBody', rows.length ? rows.map(function(r) {
     var _cc = _rowCatColor(r.src, 'src');
-    return `<tr class="swipe-row" data-sid="${r.id}" data-stype="rec" data-cc="${_cc}" style="--cc:${_cc}"><td title="${fmtDate(r.date)}">${fmtDateShort(r.date)}</td><td>${_esc(r.src||'')}</td><td class="tgrn bold">${fmt(r.val)}</td><td>${_esc(r.card||'—')}</td><td>${_esc(r.notes||'—')}</td><td><div class="ac"><button class="ic e" onclick="openModal('receita',${r.id})">✏</button><button class="ic d" onclick="delRec('rec',${r.id})">🗑</button></div></td></tr>`;
+    return `<tr class="swipe-row" data-sid="${r.id}" data-stype="rec" data-cc="${_cc}" style="--cc:${_cc}"><td title="${fmtDate(r.date)}">${fmtDateShort(r.date)}</td><td>${_hexToBadge(_cc,r.src||'')}</td><td class="tgrn bold">${fmt(r.val)}</td><td>${_esc(r.card||'—')}</td><td>${_esc(r.notes||'—')}</td><td><div class="ac"><button class="ic e" onclick="openModal('receita',${r.id})">✏</button><button class="ic d" onclick="delRec('rec',${r.id})">🗑</button></div></td></tr>`;
   }).join('') : _emptyRow(6,'↗','Nenhuma receita em '+monthLabel(globalMonth),'Usa o botão + para registar uma entrada'));
   _setTwTall(document.querySelector('#p-receitas .tw'), rows.length);
   _initSwipe('rBody', 'rec');
@@ -2803,14 +2835,26 @@ function renderCal() {
 
   var days = ['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'];
   var h = days.map(function(d){return `<div class="cahdr">${d}</div>`;}).join('');
-  for (var i = 0; i < dow; i++) h += `<div class="caday om"><div class="cadn">${prev-dow+i+1}</div></div>`;
+  for (var i = 0; i < dow; i++) {
+    var _prevDow = (i) % 7; // 0=Mon..6=Sun in the previous month cells
+    var _prevWknd = _prevDow >= 5 ? ' wknd' : '';
+    h += `<div class="caday om${_prevWknd}"><div class="cadn">${prev-dow+i+1}</div></div>`;
+  }
   for (var d = 1; d <= dim; d++) {
     var iso = Y+'-'+pad2(M+1)+'-'+pad2(d);
-    var evHtml = (ev[d]||[]).slice(0,3).map(function(e){return `<div class="caev ${e.cls}">${e.lbl}</div>`;}).join('');
-    h += `<div class="caday${iso===td?' td':''}"><div class="cadn">${d}</div>${evHtml}</div>`;
+    var dayOfWeek = (dow + d - 1) % 7; // 0=Mon..5=Sat,6=Sun
+    var isWknd = dayOfWeek >= 5;
+    var dayEvs = ev[d] || [];
+    var evHtml = dayEvs.slice(0,3).map(function(e){return `<div class="caev ${e.cls}">${e.lbl}</div>`;}).join('');
+    if (dayEvs.length > 3) evHtml += `<div class="caev-more">+${dayEvs.length-3}</div>`;
+    h += `<div class="caday${iso===td?' td':''}${isWknd?' wknd':''}"><div class="cadn">${d}</div>${evHtml}</div>`;
   }
   var rem = (dow+dim) % 7;
-  if (rem > 0) for (var j = 1; j <= 7-rem; j++) h += `<div class="caday om"><div class="cadn">${j}</div></div>`;
+  if (rem > 0) for (var j = 1; j <= 7-rem; j++) {
+    var _nextDow = (dow + dim - 1 + j) % 7;
+    var _nextWknd = _nextDow >= 5 ? ' wknd' : '';
+    h += `<div class="caday om${_nextWknd}"><div class="cadn">${j}</div></div>`;
+  }
 
   var grid = document.getElementById('calGrid');
   if (grid) grid.innerHTML = h;
@@ -3010,7 +3054,34 @@ function renderCartoes() {
   var CARD_RGBA = ['rgba(77,143,255,.35)','rgba(167,139,250,.35)','rgba(245,166,35,.35)','rgba(255,84,112,.35)'];
   var CARD_HEX  = ['#4d8fff','#a78bfa','#f5a623','#ff5470'];
 
+  // C1 — Summary KPIs (total entradas, saídas, saldo líquido)
+  var _smEl = document.getElementById('ctSummaryKpis');
+  if (_smEl) {
+    if (methods.length === 0) {
+      _smEl.innerHTML = '';
+    } else {
+      var _smIn = 0, _smOut = 0;
+      methods.forEach(function(card) {
+        if ((S.cfg.cardType||{})[card] === 'transit') return;
+        _smIn  += sumVal(recM.filter(function(r){ return r.card===card; }));
+        _smOut += sumVal(dfM.filter(function(d){ return d.card===card; }))
+                + sumVal(dcM.filter(function(d){ return d.card===card; }));
+      });
+      var _smNet = _smIn - _smOut;
+      var _smNetCol = _smNet >= 0 ? 'var(--grn)' : 'var(--red)';
+      _smEl.innerHTML =
+        `<div class="kc" style="--_a:var(--grn)"><div class="klbl">Entradas</div><div class="kval tgrn">${fmt(_smIn)}</div></div>` +
+        `<div class="kc" style="--_a:var(--red)"><div class="klbl">Saídas</div><div class="kval tred">${fmt(_smOut)}</div></div>` +
+        `<div class="kc" style="--_a:${_smNetCol}"><div class="klbl">Saldo líquido</div><div class="kval" style="color:${_smNetCol}">${_smNet>=0?'+':''}${fmt(_smNet)}</div></div>`;
+    }
+  }
+
+  // C4 — Empty state when no cards configured
   var ctEl = document.getElementById('ctCards');
+  if (ctEl && methods.length === 0) {
+    ctEl.innerHTML = _emptyDiv('👛','Nenhum cartão configurado','Adiciona cartões nas Definições → Contas');
+    return;
+  }
   if (ctEl) ctEl.innerHTML = methods.map(function(card, i) {
     // Movimentos do mês
     var ent    = sumVal(recM.filter(function(r){return r.card===card;}));
@@ -3043,7 +3114,7 @@ function renderCartoes() {
       var _hasSnapT = snap.date !== '0000-01-01';
       var snapInfoT = !_hasSnapT ? `<div style="font-size:.58rem;color:var(--ylw);margin-top:.1rem">⚠ defina saldo (⚖)</div>` : '';
       return `<div class="kc" style="--_a:${col}">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.35rem;width:100%">
+        <div class="kc-hdr">
           <div class="klbl" style="margin:0">⇄ ${card}</div>
           <button class="ic" onclick="reconcileCard('${safeCard}')" title="Reconciliar com banco" style="font-size:.65rem;width:22px;height:22px">⚖</button>
         </div>
@@ -3069,7 +3140,7 @@ function renderCartoes() {
       var txCount = dcM.filter(function(d){return d.card===card&&d._src!=='fat';}).length
                   + dfM.filter(function(d){return d.card===card;}).length;
       return `<div class="kc" style="--_a:${col}">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.3rem;width:100%">
+        <div class="kc-hdr">
           <div class="klbl" style="margin:0">💳 ${card}</div>
           <button class="ic" onclick="setFaturaManual('${safeCard}','${ym}')" title="Definir valor de fatura" style="font-size:.7rem;width:22px;height:22px">✏</button>
         </div>
@@ -3089,7 +3160,7 @@ function renderCartoes() {
     var _hasSnap = snap.date !== '0000-01-01';
     var snapInfo = !_hasSnap ? `<div style="font-size:.58rem;color:var(--ylw);margin-top:.1rem">⚠ defina saldo (⚖)</div>` : '';
     return `<div class="kc" style="--_a:${col}">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.35rem;width:100%">
+      <div class="kc-hdr">
         <div class="klbl" style="margin:0">${card}</div>
         <button class="ic" onclick="reconcileCard('${safeCard}')" title="Reconciliar com banco" style="font-size:.65rem;width:22px;height:22px">⚖</button>
       </div>
@@ -3212,7 +3283,7 @@ function renderCartoes() {
       var balTd = runBal !== null
         ? '<td style="text-align:right;color:'+(runBal>=0?'var(--grn)':'var(--red)')+';font-weight:700">'+fmt(runBal)+'</td>'
         : '<td style="text-align:right;color:var(--mut)">—</td>';
-      html += '<tr>'
+      html += '<tr data-cc="'+ti.col+'" style="--cc:'+ti.col+'">'
         + '<td>'+fmtDate(tx.date)+'</td>'
         + '<td>'+_esc(tx.desc||'')+'</td>'
         + '<td>'+_hexToBadge(ti.col, ti.lbl)+'</td>'
@@ -3240,6 +3311,16 @@ function renderMetas() {
     ? (sld >= goal ? '✅ Atingido' : '❌ Não atingido')
     : (sld >= goal ? '🟢 Na meta'  : '🔴 Fora da meta');
   var _mBadgeCls = sld >= goal ? 'gg' : 'gr';
+
+  // M5 — KPIs no topo
+  var _totalFunds = S.fnds.reduce(function(s,f){ return s + (f.saved||0); }, 0);
+  var _annSav = getLast(12, ym).reduce(function(s,m){ return s + Math.max(0, totRec(m)-totDesp(m)); }, 0);
+  var mkEl = document.getElementById('metaKpis');
+  if (mkEl) mkEl.innerHTML =
+    `<div class="kc" style="--_a:var(--pur)"><div class="klbl">Total em Fundos</div><div class="kval tpur">${fmt(_totalFunds)}</div><div class="ksub">${S.fnds.length} fundo${S.fnds.length!==1?'s':''}</div></div>` +
+    `<div class="kc" style="--_a:var(--grn)"><div class="klbl">Meta Mensal</div><div class="kval tgrn">${fmt(goal)}</div><div class="ksub">${pct}% atingido</div></div>` +
+    `<div class="kc" style="--_a:var(--blu)"><div class="klbl">Poupado (12m)</div><div class="kval tblu">${fmt(_annSav)}</div></div>`;
+
   var ms = document.getElementById('metaSav');
   if (ms) ms.innerHTML = `
     <div class="slbl">Meta de Poupança — ${monthLabelFull(ym)}</div>
@@ -3265,8 +3346,33 @@ function renderMetas() {
 
   var fc = document.getElementById('fundCards');
   if (fc) fc.innerHTML = S.fnds.length ? S.fnds.map(function(f){
-    var pct=f.goal>0?Math.min(100,Math.round(f.saved/f.goal*100)):0;
-    return `<div class="fcard"><div class="row g1" style="justify-content:space-between;margin-bottom:.2rem"><div class="fn2">${_esc(f.name)}</div><div class="ac"><button class="ic e" onclick="openModal('fund',${f.id})">✏</button><button class="ic d" onclick="delRec('fnd',${f.id})">🗑</button></div></div><div class="fm">Meta: ${fmt(f.goal)} · ${fmtDate(f.deadline)||'—'}</div><div class="row g1 mb1"><span class="tpur bold">${fmt(f.saved)}</span><span class="tmut" style="font-size:.7rem">/ ${fmt(f.goal)}</span></div><div class="pb"><div class="pf" style="width:${pct}%;background:var(--pur)"></div></div><div class="tmut" style="font-size:.66rem;margin-top:.22rem">${pct}%</div><button class="btn sec sm" style="margin-top:.6rem;width:100%" onclick="contFund(${f.id})">+ Contribuir</button></div>`;
+    var fpct = f.goal>0 ? Math.min(100,Math.round(f.saved/f.goal*100)) : 0;
+    // M4 — barra de cor por percentagem
+    var fBarCol = fpct >= 80 ? 'var(--grn)' : fpct >= 40 ? 'var(--ylw)' : 'var(--red)';
+    // M3 — dias restantes até deadline
+    var daysLeft = null, dlBadge = '';
+    if (f.deadline) {
+      var _dl = new Date(f.deadline + 'T00:00:00');
+      var _now = new Date(); _now.setHours(0,0,0,0);
+      daysLeft = Math.ceil((_dl - _now) / 86400000);
+      var dlCls = daysLeft < 0 ? 'gr' : daysLeft < 7 ? 'gr' : daysLeft < 30 ? 'gy' : 'gb';
+      var dlLbl = daysLeft < 0 ? 'vencido' : daysLeft === 0 ? 'hoje' : daysLeft + 'd';
+      dlBadge = `<span class="bdg ${dlCls}" style="font-size:.6rem">${dlLbl}</span>`;
+    }
+    return `<div class="fcard">
+      <div class="fcard-hdr">
+        <div class="fn2">${_esc(f.name)}</div>
+        <div style="display:flex;align-items:center;gap:.3rem">
+          ${dlBadge}
+          <div class="ac"><button class="ic e" onclick="openModal('fund',${f.id})">✏</button><button class="ic d" onclick="delRec('fnd',${f.id})">🗑</button></div>
+        </div>
+      </div>
+      <div class="fm">Meta: ${fmt(f.goal)}${f.deadline?' · '+fmtDate(f.deadline):' · sem prazo'}</div>
+      <div class="row g1 mb1"><span style="color:${fBarCol};font-weight:700">${fmt(f.saved)}</span><span class="tmut" style="font-size:.7rem">/ ${fmt(f.goal)}</span></div>
+      <div class="pb"><div class="pf" style="width:${fpct}%;background:${fBarCol}"></div></div>
+      <div class="tmut" style="font-size:.66rem;margin-top:.22rem">${fpct}%</div>
+      <button class="btn sec sm" style="margin-top:.6rem;width:100%" onclick="contFund(${f.id})">+ Contribuir</button>
+    </div>`;
   }).join('') : _emptyDiv('◎','Nenhum fundo criado','Adiciona um fundo de poupança com o botão +');
 }
 
