@@ -737,7 +737,6 @@ tr.swipe-del{background:rgba(255,84,112,.28)!important;transition:background .15
 
 <!-- CALENDÁRIO -->
 <div class="pnl" id="p-cal">
-  <div class="kg mb2" id="calKpis"></div>
   <div class="cc mb2">
     <div class="cal-legend">
       <span class="caev evg" style="font-size:.65rem;padding:.12rem .5rem">Receita</span>
@@ -760,7 +759,6 @@ tr.swipe-del{background:rgba(255,84,112,.28)!important;transition:background .15
 
 <!-- CARTÕES -->
 <div class="pnl" id="p-cartoes">
-  <div class="kg mb1" id="ctSummaryKpis"></div>
   <div class="kg mb2" id="ctCards"></div>
   <div class="cc mb2"><div class="slbl">Gastos por Cartão</div><canvas id="chCt"></canvas></div>
   <div class="tc">
@@ -2932,17 +2930,7 @@ function renderCal() {
   S.rec.filter(function(r){return inMonth(r.date,ym);}).forEach(function(r){addEv(parseInt(r.date.slice(8)),_esc(r.src||'')+' '+fmt(r.val),'evg');});
   S.evt.filter(function(e){return inMonth(e.date,ym);}).forEach(function(e){addEv(parseInt(e.date.slice(8)),_esc(e.name||'')+(e.val?' '+fmt(e.val):''),'evb');});
 
-  var _calRec = totRec(ym), _calDesp = totDesp(ym);
-  var _calEvts = S.evt.filter(function(e){ return inMonth(e.date, ym); }).length;
-  var _calRecN = S.rec.filter(function(r){ return inMonth(r.date, ym); }).length;
-  var _calDespN = S.df.filter(function(d){ return isActiveForYm(d, ym); }).length
-                + S.dc.filter(function(d){ return inMonth(d.date, ym); }).length;
-  var prevYmCal = addMonths(ym, -1);
-  var calKpis = document.getElementById('calKpis');
-  if (calKpis) calKpis.innerHTML =
-    `<div class="kc" style="--_a:var(--grn)"><div class="klbl">Receitas</div><div class="kval tgrn">${fmt(_calRec)}</div>${trendHtml(_calRec,totRec(prevYmCal),false)}<div class="ksub">${_calRecN} entrada${_calRecN!==1?'s':''}</div></div>` +
-    `<div class="kc" style="--_a:var(--red)"><div class="klbl">Despesas</div><div class="kval tred">${fmt(_calDesp)}</div>${trendHtml(_calDesp,totDesp(prevYmCal),true)}<div class="ksub">${_calDespN} lançamento${_calDespN!==1?'s':''}</div></div>` +
-    `<div class="kc" style="--_a:var(--blu)"><div class="klbl">Eventos</div><div class="kval tblu">${_calEvts}</div><div class="ksub">${_calEvts ? 'neste mês' : 'sem eventos'}</div></div>`;
+
 
   var days = ['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'];
   var h = days.map(function(d){return `<div class="cahdr">${d}</div>`;}).join('');
@@ -3135,37 +3123,7 @@ function renderCartoes() {
   var CARD_RGBA = ['rgba(77,143,255,.35)','rgba(167,139,250,.35)','rgba(245,166,35,.35)','rgba(255,84,112,.35)'];
   var CARD_HEX  = ['#4d8fff','#a78bfa','#f5a623','#ff5470'];
 
-  // C1 — Summary KPIs (total entradas, saídas, saldo líquido) com trend
-  var _smEl = document.getElementById('ctSummaryKpis');
-  if (_smEl) {
-    if (methods.length === 0) {
-      _smEl.innerHTML = '';
-    } else {
-      var _smIn = 0, _smOut = 0;
-      var prevYmCt = addMonths(ym, -1);
-      var dfPrev = S.df.filter(function(d){ return isActiveForYm(d, prevYmCt); });
-      var dcPrev = S.dc.filter(function(d){ return inMonth(d.date, prevYmCt) && !d._src; });
-      var recPrev = S.rec.filter(function(r){ return inMonth(r.date, prevYmCt); });
-      var _smPrevIn = 0, _smPrevOut = 0;
-      methods.forEach(function(card) {
-        if ((S.cfg.cardType||{})[card] === 'transit') return;
-        _smIn     += sumVal(recM.filter(function(r){ return r.card===card; }));
-        _smOut    += sumVal(dfM.filter(function(d){ return d.card===card; }))
-                  + sumVal(dcM.filter(function(d){ return d.card===card; }));
-        _smPrevIn  += sumVal(recPrev.filter(function(r){ return r.card===card; }));
-        _smPrevOut += sumVal(dfPrev.filter(function(d){ return d.card===card; }))
-                   + sumVal(dcPrev.filter(function(d){ return d.card===card; }));
-      });
-      var _smNet = _smIn - _smOut, _smPrevNet = _smPrevIn - _smPrevOut;
-      var _smNetCol = _smNet >= 0 ? 'var(--grn)' : 'var(--red)';
-      _smEl.innerHTML =
-        `<div class="kc" style="--_a:var(--grn)"><div class="klbl">Entradas</div><div class="kval tgrn">${fmt(_smIn)}</div>${trendHtml(_smIn,_smPrevIn,false)}</div>` +
-        `<div class="kc" style="--_a:var(--red)"><div class="klbl">Saídas</div><div class="kval tred">${fmt(_smOut)}</div>${trendHtml(_smOut,_smPrevOut,true)}</div>` +
-        `<div class="kc" style="--_a:${_smNetCol}"><div class="klbl">Saldo líquido</div><div class="kval" style="color:${_smNetCol}">${_smNet>=0?'+':''}${fmt(_smNet)}</div>${trendHtml(_smNet,_smPrevNet,false)}</div>`;
-    }
-  }
-
-  // C4 — Empty state when no cards configured
+  // Empty state when no cards configured
   var ctEl = document.getElementById('ctCards');
   if (ctEl && methods.length === 0) {
     ctEl.innerHTML = _emptyDiv('👛','Nenhum cartão configurado','Adiciona cartões nas Definições → Contas');
