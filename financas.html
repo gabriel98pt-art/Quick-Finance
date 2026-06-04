@@ -816,6 +816,7 @@ tr.swipe-del{background:rgba(255,84,112,.28)!important;transition:background .15
     <div class="set-body" id="setBody"></div>
     <div class="row g1 wrap" style="padding:.75rem 1rem;border-top:1px solid var(--brd);justify-content:flex-end;flex-shrink:0;flex-wrap:wrap;gap:.4rem">
       <button class="btn sec sm" onclick="showHost()">🌐 Acesso Remoto</button>
+      <button class="btn sec sm" onclick="changeFbPw()">🔑 Mudar senha sync</button>
       <button class="btn sec sm" onclick="exportCSV()">📊 Exportar CSV</button>
       <button class="btn sec sm" onclick="exportData()">📤 Exportar JSON</button>
       <button class="btn sec sm" onclick="document.getElementById('impFile').click()">📥 Importar</button>
@@ -4221,6 +4222,29 @@ function saveSet() {
 }
 
 function showHost() { closeSet(); document.getElementById('hostModal').classList.add('on'); }
+
+function changeFbPw() {
+  var nova = prompt('Nova senha de sincronização:\n(mínimo 6 caracteres)');
+  if (!nova || nova.length < 6) { if (nova !== null) showToast('⚠ Mínimo 6 caracteres', true); return; }
+  var user = firebase.auth().currentUser;
+  if (!user) { showToast('⚠ Não ligado ao Firebase', true); return; }
+  user.updatePassword(nova).then(function() {
+    localStorage.setItem('_fbPw', nova);
+    showToast('✓ Senha alterada e guardada');
+  }).catch(function(e) {
+    if (e.code === 'auth/requires-recent-login') {
+      // Re-autentica com a senha actual e tenta de novo
+      var atual = localStorage.getItem('_fbPw') || prompt('Introduz a senha actual para confirmar:');
+      if (!atual) return;
+      firebase.auth().signInWithEmailAndPassword('qf@orgfinanceira.local', atual)
+        .then(function() { return firebase.auth().currentUser.updatePassword(nova); })
+        .then(function() { localStorage.setItem('_fbPw', nova); showToast('✓ Senha alterada e guardada'); })
+        .catch(function(e2) { showToast('⚠ Erro: ' + e2.message, true); });
+    } else {
+      showToast('⚠ Erro: ' + e.message, true);
+    }
+  });
+}
 
 // ================================================================
 // IMPORTAR EXTRATO BANCÁRIO
