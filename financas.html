@@ -380,16 +380,18 @@ code{background:var(--s2);padding:.1rem .35rem;border-radius:4px;font-size:.8em}
      max-height:90vh;overflow-y:auto;box-shadow:0 -6px 40px rgba(0,0,0,.45)}
 .qsh.on{transform:translateY(0)}
 .qhandle{width:36px;height:4px;background:var(--s3);border-radius:2px;margin:.7rem auto .9rem}
-.qtype{display:grid;grid-template-columns:1fr 1fr;gap:.38rem;
+.qtype{display:grid;grid-template-columns:1fr 1fr 1fr;gap:.38rem;
        background:var(--s2);border-radius:10px;padding:.28rem;margin-bottom:1rem}
 .qtpill{border-radius:7px;padding:.52rem;font-size:.8rem;font-weight:700;
         text-align:center;color:var(--mut);transition:all .16s;border:none;cursor:pointer;background:none}
 .qtpill.qte{background:var(--red);color:#fff;box-shadow:0 2px 8px rgba(255,84,112,.32)}
 .qtpill.qti{background:var(--grn);color:#0d0f18;box-shadow:0 2px 8px rgba(0,212,160,.28)}
+.qtpill.qtv{background:var(--ylw);color:#0d0f18;box-shadow:0 2px 8px rgba(245,166,35,.32)}
 .qamt-wrap{background:var(--s2);border-radius:14px;padding:.9rem 1rem .75rem;
            margin-bottom:.9rem;border:1.5px solid var(--brd);transition:border-color .2s}
 .qamt-wrap.qte{border-color:rgba(255,84,112,.25)}
 .qamt-wrap.qti{border-color:rgba(0,212,160,.2)}
+.qamt-wrap.qtv{border-color:rgba(245,166,35,.3)}
 .qaml{font-size:.6rem;color:var(--mut);font-weight:700;text-transform:uppercase;
       letter-spacing:.08em;margin-bottom:.32rem}
 .qamr{display:flex;align-items:baseline;gap:.25rem}
@@ -410,6 +412,7 @@ code{background:var(--s2);padding:.1rem .35rem;border-radius:4px;font-size:.8em}
 .qchip.qce{color:var(--red);border-color:rgba(255,84,112,.42);background:rgba(255,84,112,.1)}
 .qchip.qci{color:var(--grn);border-color:rgba(0,212,160,.4);background:rgba(0,212,160,.1)}
 .qchip.qca{color:var(--blu);border-color:var(--blu);background:rgba(77,143,255,.13)}
+.qchip.qcv{color:var(--ylw);border-color:rgba(245,166,35,.45);background:rgba(245,166,35,.1)}
 .qdetail{display:flex;gap:.45rem;margin-bottom:.9rem}
 .qdet{display:flex;align-items:center;gap:.32rem;background:var(--s2);
       border:1.5px solid var(--brd);border-radius:8px;padding:.42rem .72rem;
@@ -427,6 +430,7 @@ code{background:var(--s2);padding:.1rem .35rem;border-radius:4px;font-size:.8em}
 .qsave:disabled{opacity:.35;pointer-events:none}
 .qsave.qte{background:var(--red);color:#fff;box-shadow:0 4px 16px rgba(255,84,112,.3)}
 .qsave.qti{background:var(--grn);color:#0d0f18;box-shadow:0 4px 16px rgba(0,212,160,.24)}
+.qsave.qtv{background:var(--ylw);color:#0d0f18;box-shadow:0 4px 16px rgba(245,166,35,.28)}
 /* search + card filter bar */
 .srch-bar{display:flex;align-items:center;gap:.4rem;flex-wrap:wrap;padding:.55rem 1rem;border-bottom:1px solid var(--brd);background:var(--s2)}
 .srch-bar input{flex:1;min-width:120px;background:var(--bg);border:1px solid var(--brd);border-radius:var(--r-sm);padding:.32rem .65rem;font-size:.8rem;color:var(--txt);outline:none}
@@ -6953,21 +6957,23 @@ function qClose() {
 function qType(t) { _qT=t; _qCat=''; _qRender(); }
 
 function _qRender() {
-  var isE=_qT==='e';
-  var pe=document.getElementById('qtE'), pi=document.getElementById('qtI');
+  var isE=_qT==='e', isI=_qT==='i', isV=_qT==='v';
+  var pe=document.getElementById('qtE'), pi=document.getElementById('qtI'), pv=document.getElementById('qtV');
   if(pe) pe.className='qtpill'+(isE?' qte':'');
-  if(pi) pi.className='qtpill'+(!isE?' qti':'');
-  var aw=document.getElementById('qAmtWrap'); if(aw) aw.className='qamt-wrap '+_qT;
+  if(pi) pi.className='qtpill'+(isI?' qti':'');
+  if(pv) pv.className='qtpill'+(isV?' qtv':'');
+  var aw=document.getElementById('qAmtWrap'); if(aw) aw.className='qamt-wrap '+(isV?'qtv':_qT);
   var sb=document.getElementById('qSaveBtn');
-  if(sb){ sb.className='qsave '+_qT; sb.textContent='Guardar '+(isE?'despesa':'receita'); }
-  var cl=document.getElementById('qCatLbl'); if(cl) cl.textContent=isE?'Categoria':'Fonte';
+  if(sb){ sb.className='qsave '+(isV?'qtv':_qT); sb.textContent='Guardar '+(isE?'despesa':isI?'receita':'veículo'); }
+  var cl=document.getElementById('qCatLbl'); if(cl) cl.textContent=isE?'Categoria':isI?'Fonte':'Tipo';
 
-  var cats=isE?(S.cfg.ccat||[]):(S.cfg.src||[]);
+  var cats=isE?(S.cfg.ccat||[]):isI?(S.cfg.src||[]):(S.cfg.vcat||[]);
   if(!_qCat && cats.length) _qCat=cats[0];
   var cc=document.getElementById('qCatChips');
   if(cc) cc.innerHTML=cats.map(function(c){
     var sel=_qCat===c;
-    return '<button type="button" class="qchip'+(sel?' q'+(isE?'ce':'ci'):'')
+    var cls=isE?'qce':isI?'qci':'qcv';
+    return '<button type="button" class="qchip'+(sel?' '+cls:'')
       +'" data-val="'+_esc(c)+'" onclick="qPickCat(this.dataset.val)">'+_esc(c)+'</button>';
   }).join('');
 
@@ -7018,11 +7024,18 @@ function qSave(){
   snapshot();
   if(_qT==='i'){
     S.rec.push({id:nid(),date:date,src:cat,val:amt,card:acc,notes:notes});
+  } else if(_qT==='v'){
+    var vid=nid();
+    S.veh.lp.push({id:vid,date:date,tipo:cat,val:amt,card:acc,notes:notes});
+    S.dc.push({id:nid(),date:date,cat:cat||((S.cfg.vcat&&S.cfg.vcat[0])||'Veículo'),
+      val:amt,card:acc,notes:'🚘 '+(cat||'Veículo')+(notes?' — '+notes:''),
+      _src:'veh',_vid:vid,_vtype:'limp'});
+    globalMonth=date.slice(0,7); S.cfg.lastMonth=globalMonth;
   } else {
     S.dc.push({id:nid(),date:date,name:cat,cat:cat,val:amt,card:acc,notes:notes});
   }
   saveState(); renderTab(CUR); qClose();
-  showToast('✓ '+(_qT==='i'?'Receita':'Despesa')+' guardada — '+amt.toFixed(2)+' €');
+  showToast('✓ '+(_qT==='i'?'Receita':_qT==='v'?'Veículo':'Despesa')+' guardada — '+amt.toFixed(2)+' €');
 }
 
 // ================================================================
@@ -7144,6 +7157,7 @@ function _impBankFile(bank) {
   <div class="qtype">
     <button class="qtpill qte" id="qtE" onclick="qType('e')">↘ Despesa</button>
     <button class="qtpill" id="qtI" onclick="qType('i')">↗ Receita</button>
+    <button class="qtpill" id="qtV" onclick="qType('v')">🚘 Veículo</button>
   </div>
   <div class="qamt-wrap qte" id="qAmtWrap">
     <div class="qaml">Valor</div>
