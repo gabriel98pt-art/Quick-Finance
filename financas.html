@@ -183,15 +183,15 @@ tbody.anim tr:nth-child(n+6){animation-delay:.14s}
 
 /* FORM */
 .fg{display:grid;grid-template-columns:1fr 1fr;gap:.6rem}
-@media(max-width:400px){.fg{grid-template-columns:1fr}}
+@media(max-width:480px){.fg{grid-template-columns:1fr}}
 .ff{display:flex;flex-direction:column;gap:.3rem}
 .ff.full{grid-column:1/-1}
 .fl{font-size:.67rem;font-weight:600;color:var(--mut);text-transform:uppercase;letter-spacing:.05em}
 .fi{background:var(--s2);border:1.5px solid var(--brd);border-radius:var(--r-sm);color:var(--txt);font-size:.83rem;padding:.45rem .75rem;width:100%;font-family:inherit;transition:border-color var(--tr),box-shadow var(--tr)}
 .sel{background:var(--s2);border:1.5px solid var(--brd);border-radius:var(--r-sm);color:var(--txt);font-size:.8rem;font-weight:600;padding:.38rem .7rem;font-family:inherit;cursor:pointer;transition:border-color var(--tr)}
-.sel:focus{outline:none;border-color:var(--blu);box-shadow:0 0 0 3px rgba(77,143,255,.15)}
+.sel:focus{outline:none;border-color:var(--blu);box-shadow:0 0 0 3px rgba(77,143,255,.15);position:relative;z-index:1}
 .sel option{background:var(--s1);color:var(--txt)}
-.fi:focus{outline:none;border-color:var(--blu);box-shadow:0 0 0 3px rgba(77,143,255,.15)}
+.fi:focus{outline:none;border-color:var(--blu);box-shadow:0 0 0 3px rgba(77,143,255,.15);position:relative;z-index:1}
 .fiu{background:rgba(77,143,255,.07);border-color:rgba(77,143,255,.3)}
 
 /* SETTINGS */
@@ -480,6 +480,12 @@ tr.swipe-del{background:rgba(255,84,112,.28)!important;transition:background .15
   th,td{border:1px solid #ddd;padding:.3rem .5rem;font-size:9pt}
   .dash-grid{display:block}
   canvas{max-height:220px}
+}
+/* Mobile: previne iOS auto-zoom (font-size < 16px dispara zoom no Safari) */
+@media(max-width:768px){
+  .fi,.sel{font-size:1rem}
+  .srch-bar input,.srch-bar select{font-size:1rem}
+  .qdet input{font-size:1rem}
 }</style>
 </head>
 <body>
@@ -651,9 +657,9 @@ tr.swipe-del{background:rgba(255,84,112,.28)!important;transition:background .15
         <button class="btn sec sm" onclick="applyDcPreset(90)">3 meses</button>
         <button class="btn sec sm" onclick="applyDcPresetYear()">Este ano</button>
         <div class="sep" style="height:18px;margin:0 .1rem"></div>
-        <input type="date" id="dcFrom" class="fi" style="max-width:140px;padding:.3rem .55rem;font-size:.78rem" onchange="applyDcCustomRange()" title="Data início">
+        <input type="date" id="dcFrom" class="fi" style="max-width:140px;padding:.3rem .55rem" onchange="applyDcCustomRange()" title="Data início">
         <span style="color:var(--mut);font-size:.75rem">até</span>
-        <input type="date" id="dcTo" class="fi" style="max-width:140px;padding:.3rem .55rem;font-size:.78rem" onchange="applyDcCustomRange()" title="Data fim">
+        <input type="date" id="dcTo" class="fi" style="max-width:140px;padding:.3rem .55rem" onchange="applyDcCustomRange()" title="Data fim">
         <button class="btn dan sm" id="dcClearBtn" onclick="clearDcRange()" style="display:none">✕ Limpar</button>
       </div>
     </div>
@@ -6943,10 +6949,10 @@ window.addEventListener('resize', fixStickyOffsets);
 // ================================================================
 // QUICK-ADD FAB
 // ================================================================
-var _qT='e', _qCat='', _qAcc='';
+var _qT='e', _qCat='', _qAcc='', _qVSub='cg';
 
 function qOpen() {
-  _qCat=''; _qAcc='';
+  _qCat=''; _qAcc=''; _qVSub='cg';
   var ai=document.getElementById('qAmt'); if(ai) ai.value='';
   var ni=document.getElementById('qNote'); if(ni) ni.value='';
   var vl=document.getElementById('qVehLocal'); if(vl) vl.value='';
@@ -6962,28 +6968,48 @@ function qClose() {
   document.getElementById('qOv').classList.remove('on');
   document.getElementById('qSh').classList.remove('on');
 }
-function qType(t) { _qT=t; _qCat=''; _qRender(); }
+function qType(t) { _qT=t; _qCat=''; if(t==='v') _qVSub='cg'; _qRender(); }
+function qVSub(s) { _qVSub=s; _qCat=''; _qRender(); }
 
 function _qRender() {
   var isE=_qT==='e', isI=_qT==='i', isV=_qT==='v';
+  var isCg=isV && _qVSub==='cg';
+
+  // pills tipo
   var pe=document.getElementById('qtE'), pi=document.getElementById('qtI'), pv=document.getElementById('qtV');
   if(pe) pe.className='qtpill'+(isE?' qte':'');
   if(pi) pi.className='qtpill'+(isI?' qti':'');
   if(pv) pv.className='qtpill'+(isV?' qtv':'');
+
+  // sub-row veículo
+  var vsr=document.getElementById('qVSubRow');
+  if(vsr){ vsr.style.display=isV?'grid':'none'; }
+  var pCg=document.getElementById('qVSubCg'), pLp=document.getElementById('qVSubLp');
+  if(pCg) pCg.className='qtpill'+(isCg?' qtv':'');
+  if(pLp) pLp.className='qtpill'+(!isCg&&isV?' qtv':'');
+
   var aw=document.getElementById('qAmtWrap'); if(aw) aw.className='qamt-wrap '+(isV?'qtv':_qT);
   var sb=document.getElementById('qSaveBtn');
-  if(sb){ sb.className='qsave '+(isV?'qtv':_qT); sb.textContent='Guardar '+(isE?'despesa':isI?'receita':'veículo'); }
-  var cl=document.getElementById('qCatLbl'); if(cl) cl.textContent=isE?'Categoria':isI?'Fonte':'Tipo';
+  if(sb){ sb.className='qsave '+(isV?'qtv':_qT); sb.textContent='GUARDAR'; }
 
-  var cats=isE?(S.cfg.ccat||[]):isI?(S.cfg.src||[]):(S.cfg.vcat||[]);
-  if(!_qCat && cats.length) _qCat=cats[0];
+  // label + chips categorias (escondidos para carga)
+  var cl=document.getElementById('qCatLbl');
   var cc=document.getElementById('qCatChips');
-  if(cc) cc.innerHTML=cats.map(function(c){
-    var sel=_qCat===c;
-    var cls=isE?'qce':isI?'qci':'qcv';
-    return '<button type="button" class="qchip'+(sel?' '+cls:'')
-      +'" data-val="'+_esc(c)+'" onclick="qPickCat(this.dataset.val)">'+_esc(c)+'</button>';
-  }).join('');
+  if(isCg){
+    if(cl){ cl.style.display='none'; }
+    if(cc){ cc.style.display='none'; cc.innerHTML=''; }
+  } else {
+    if(cl){ cl.style.display=''; cl.textContent=isE?'Categoria':isI?'Fonte':'Tipo'; }
+    if(cc){ cc.style.display=''; }
+    var cats=isE?(S.cfg.ccat||[]):isI?(S.cfg.src||[]):(S.cfg.vcat||[]);
+    if(!_qCat && cats.length) _qCat=cats[0];
+    if(cc) cc.innerHTML=cats.map(function(c){
+      var sel=_qCat===c;
+      var cls=isE?'qce':isI?'qci':'qcv';
+      return '<button type="button" class="qchip'+(sel?' '+cls:'')
+        +'" data-val="'+_esc(c)+'" onclick="qPickCat(this.dataset.val)">'+_esc(c)+'</button>';
+    }).join('');
+  }
 
   var accs=S.cfg.pay||[];
   if(!_qAcc && accs.length) _qAcc=accs[0];
@@ -6994,8 +7020,9 @@ function _qRender() {
       +'" data-val="'+_esc(a)+'" onclick="qPickAcc(this.dataset.val)">'+_esc(a)+'</button>';
   }).join('');
 
+  // campos extra carga
   var vx=document.getElementById('qVehExtra');
-  if(vx) vx.style.display=(isV && _qCat==='Carga Elétrica')?'flex':'none';
+  if(vx) vx.style.display=isCg?'flex':'none';
 }
 function qPickCat(c){ _qCat=c; _qRender(); }
 function qPickAcc(a){ _qAcc=a; _qRender(); }
@@ -7037,7 +7064,7 @@ function qSave(){
     S.rec.push({id:nid(),date:date,src:cat,val:amt,card:acc,notes:notes});
   } else if(_qT==='v'){
     var vid=nid();
-    if(cat==='Carga Elétrica'){
+    if(_qVSub==='cg'){
       var local=((document.getElementById('qVehLocal')||{}).value||'').trim();
       var kwhRaw=((document.getElementById('qVehKwh')||{}).value||'').replace(',','.');
       var kwh=parseFloat(kwhRaw)||null;
@@ -7057,7 +7084,7 @@ function qSave(){
     S.dc.push({id:nid(),date:date,name:cat,cat:cat,val:amt,card:acc,notes:notes});
   }
   saveState(); renderTab(CUR); qClose();
-  showToast('✓ '+(_qT==='i'?'Receita':_qT==='v'?'Veículo':'Despesa')+' guardada — '+amt.toFixed(2)+' €');
+  showToast('✓ '+(_qT==='i'?'Receita':_qT==='v'?(_qVSub==='cg'?'Carga Elétrica':'Veículo'):'Despesa')+' guardada — '+amt.toFixed(2)+' €');
 }
 
 // ================================================================
@@ -7232,6 +7259,10 @@ function _impBankFile(bank) {
              placeholder="0" autocomplete="off" autocorrect="off" spellcheck="false">
     </div>
   </div>
+  <div id="qVSubRow" style="display:none;grid-template-columns:1fr 1fr;gap:.38rem;background:var(--s2);border-radius:10px;padding:.28rem;margin-bottom:.75rem">
+    <button class="qtpill qtv" id="qVSubCg" onclick="qVSub('cg')">⚡ Carga</button>
+    <button class="qtpill" id="qVSubLp" onclick="qVSub('lp')">🔧 Despesa</button>
+  </div>
   <div class="qsl" id="qCatLbl">Categoria</div>
   <div class="qchips" id="qCatChips"></div>
   <div class="qsl">Conta</div>
@@ -7258,7 +7289,7 @@ function _impBankFile(bank) {
       <input type="text" id="qNote" placeholder="Nota..." autocomplete="off" maxlength="120">
     </div>
   </div>
-  <button class="qsave qte" id="qSaveBtn" onclick="qSave()">Guardar despesa</button>
+  <button class="qsave qte" id="qSaveBtn" onclick="qSave()">GUARDAR</button>
 </div>
 </body>
 </html>
