@@ -882,6 +882,7 @@ var SK = 'fin_v4';
 // FIREBASE SYNC
 // ================================================================
 var _fbDb = null;
+var _FB_USER = 'qf@orgfinanceira.local';
 (function() {
   try {
     if (!firebase.apps.length) {
@@ -895,19 +896,17 @@ var _fbDb = null;
         appId:             '1:687712813015:web:2070c4ee83a4d80040d592'
       });
     }
-    var _fbPw = localStorage.getItem('_fbPw');
-    if (_fbPw) {
-      firebase.auth().signInWithEmailAndPassword('qf@orgfinanceira.local', _fbPw).then(function() {
-        _fbDb = firebase.database();
-        _fbSync(false);
-      }).catch(function(e){
-        console.warn('[FB auth]', e);
-        localStorage.removeItem('_fbPw');
-        _fbShowLoginModal();
+    // Usa a persistência nativa do Firebase Auth (token em IndexedDB, nunca a senha)
+    firebase.auth().setPersistence(firebase.auth.Auth.Persistence.LOCAL).then(function() {
+      firebase.auth().onAuthStateChanged(function(user) {
+        if (user) {
+          _fbDb = firebase.database();
+          _fbSync(false);
+        } else {
+          _fbShowLoginModal();
+        }
       });
-    } else {
-      _fbShowLoginModal();
-    }
+    }).catch(function(e) { console.warn('[FB init]', e); });
   } catch(e) { console.warn('[FB init]', e); }
 })();
 
@@ -933,7 +932,7 @@ function _fbShowLoginModal() {
         '<button class="btn sec" style="justify-content:center" onclick="_fbLoginSkip()">Continuar sem sincronização</button>' +
       '</div>' +
       '<div style="margin-top:1rem;padding-top:.9rem;border-top:1px solid var(--brd);font-size:.72rem;color:var(--mut);line-height:1.6">' +
-        '💡 Esqueceste a senha? Vai a <strong style="color:var(--txt)">console.firebase.google.com</strong> → Authentication → Users → <code>qf@orgfinanceira.local</code> → Reset password.' +
+        '💡 Esqueceste a senha? Vai a <strong style="color:var(--txt)">console.firebase.google.com</strong> → Authentication → Users → Reset password.' +
       '</div>' +
     '</div>';
   el.classList.add('on');
@@ -946,8 +945,7 @@ function _fbLoginSubmit() {
   var pw = (document.getElementById('_fbPwInput')||{}).value || '';
   if (!pw) return;
   var errEl = document.getElementById('_fbPwErr');
-  firebase.auth().signInWithEmailAndPassword('qf@orgfinanceira.local', pw).then(function() {
-    localStorage.setItem('_fbPw', pw);
+  firebase.auth().signInWithEmailAndPassword(_FB_USER, pw).then(function() {
     _fbDb = firebase.database();
     var el = document.getElementById('_fbLoginModal');
     if (el) el.classList.remove('on');
@@ -4426,16 +4424,14 @@ function changeFbPw() {
   var user = firebase.auth().currentUser;
   if (!user) { showToast('⚠ Não ligado ao Firebase', true); return; }
   user.updatePassword(nova).then(function() {
-    localStorage.setItem('_fbPw', nova);
-    showToast('✓ Senha alterada e guardada');
+    showToast('✓ Senha alterada');
   }).catch(function(e) {
     if (e.code === 'auth/requires-recent-login') {
-      // Re-autentica com a senha actual e tenta de novo
-      var atual = localStorage.getItem('_fbPw') || prompt('Introduz a senha actual para confirmar:');
+      var atual = prompt('Introduz a senha actual para confirmar:');
       if (!atual) return;
-      firebase.auth().signInWithEmailAndPassword('qf@orgfinanceira.local', atual)
+      firebase.auth().signInWithEmailAndPassword(_FB_USER, atual)
         .then(function() { return firebase.auth().currentUser.updatePassword(nova); })
-        .then(function() { localStorage.setItem('_fbPw', nova); showToast('✓ Senha alterada e guardada'); })
+        .then(function() { showToast('✓ Senha alterada'); })
         .catch(function(e2) { showToast('⚠ Erro: ' + e2.message, true); });
     } else {
       showToast('⚠ Erro: ' + e.message, true);
