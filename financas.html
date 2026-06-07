@@ -950,8 +950,6 @@ function _fbLoginSubmit() {
     var el = document.getElementById('_fbLoginModal');
     if (el) el.classList.remove('on');
     _fbSync(false);
-    var uid = firebase.auth().currentUser && firebase.auth().currentUser.uid;
-    console.info('[FB] UID:', uid);
     showToast('☁ Ligado ao Firebase');
   }).catch(function(e) {
     console.warn('[FB auth]', e);

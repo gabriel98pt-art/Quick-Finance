@@ -1,6 +1,6 @@
 {
   "rules": {
-    ".read": "auth != null && auth.token.email === 'qf@orgfinanceira.local'",
-    ".write": "auth != null && auth.token.email === 'qf@orgfinanceira.local'"
+    ".read": "auth.uid === '27Xm1TNeJfTaXRT7XMYHP0c18Bo2'",
+    ".write": "auth.uid === '27Xm1TNeJfTaXRT7XMYHP0c18Bo2'"
   }
 }
