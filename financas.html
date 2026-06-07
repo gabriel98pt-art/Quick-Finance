@@ -74,7 +74,7 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;background:
 .kc:hover{transform:translateY(-2px)}
 .kc::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:var(--_a,var(--blu))}
 .klbl{font-size:.63rem;color:var(--mut);font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-bottom:.3rem}
-.kval{font-size:1.15rem;font-weight:800;line-height:1.1;letter-spacing:-.02em}
+.kval{font-size:1.9rem;font-weight:800;line-height:1.1;letter-spacing:-.03em}
 .ksub{font-size:.62rem;color:var(--mut);margin-top:.22rem}
 
 /* CHART */
@@ -100,7 +100,7 @@ body.compact tbody td{padding:.22rem .6rem;font-size:.75rem}
 body.compact tfoot td{padding:.22rem .6rem}
 tbody tr:last-child td{border-bottom:none}
 tbody tr:nth-child(even){background:rgba(128,128,255,.03)}
-tbody tr:hover{background:var(--s2)!important}
+tbody tr:hover{background:rgba(77,143,255,.06)!important}
 tfoot td{padding:.5rem 1rem;font-size:.8rem;font-weight:700;background:var(--s2);border-top:2px solid var(--brd);position:sticky;bottom:0;z-index:2}
 /* category color stripe */
 tbody tr td:first-child{border-left:3px solid transparent}
@@ -112,8 +112,8 @@ tbody tr[data-cc] td:first-child{border-left-color:var(--cc)}
 .ac{display:flex;gap:.2rem;align-items:center}
 
 /* EMPTY */
-.empty{text-align:center;padding:2.5rem 1rem;color:var(--mut)}
-.ei{font-size:2.4rem;display:block;margin-bottom:.6rem;opacity:.35}
+.empty{text-align:center;padding:2.5rem 1rem;color:var(--mut);border:1.5px dashed rgba(124,130,160,.18);border-radius:var(--r);margin:.25rem 0}
+.ei{font-size:1.5rem;display:flex;align-items:center;justify-content:center;width:52px;height:52px;background:rgba(255,255,255,.05);border-radius:50%;margin:0 auto .75rem}
 .empty-msg{font-size:.82rem;font-weight:600;color:var(--txt);margin-bottom:.25rem}
 .empty-sub{font-size:.72rem;color:var(--mut)}
 /* ROW FADE-IN */
@@ -158,8 +158,9 @@ tbody.anim tr:nth-child(n+6){animation-delay:.14s}
 .ay{background:rgba(245,166,35,.1);border:1px solid rgba(245,166,35,.2);color:var(--ylw)}
 
 /* PROGRESS */
-.pb{height:6px;background:var(--s3);border-radius:3px;overflow:hidden;margin-top:.35rem}
-.pf{height:100%;border-radius:3px;transition:width .5s ease}
+.pb{height:8px;background:rgba(255,255,255,.06);border-radius:4px;overflow:hidden;margin-top:.35rem;box-shadow:inset 0 1px 2px rgba(0,0,0,.2)}
+.pf{height:100%;border-radius:4px;transition:width .5s ease;position:relative;overflow:hidden}
+.pf::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,rgba(255,255,255,0) 0%,rgba(255,255,255,.18) 50%,rgba(255,255,255,0) 100%);border-radius:inherit}
 
 /* MONTH NAV */
 .nav-pair{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;margin-bottom:.9rem}
@@ -451,7 +452,7 @@ code{background:var(--s2);padding:.1rem .35rem;border-radius:4px;font-size:.8em}
 tr.swipe-row{cursor:default}
 tr.swipe-del{background:rgba(255,84,112,.28)!important;transition:background .15s}
 /* month comparison */
-.cmp-row{display:flex;gap:.5rem;flex-wrap:wrap;padding:.3rem 0 .6rem;margin-bottom:.25rem}
+.cmp-row{display:none}
 .cmp-chip{font-size:.7rem;padding:.2rem .55rem;border-radius:20px;background:var(--s2);display:flex;align-items:center;gap:.3rem}
 .cmp-up{color:#00d4a0}.cmp-dn{color:#ff5470}.cmp-eq{color:var(--mut)}
 /* alert badge on tab */
@@ -2213,11 +2214,13 @@ function renderDashboard() {
     var futureBanner = isFutureYm
       ? `<div style="grid-column:1/-1;background:rgba(245,166,35,.1);border:1px solid rgba(245,166,35,.3);border-radius:8px;padding:.45rem .8rem;font-size:.72rem;color:var(--ylw);margin-bottom:.1rem">📅 Mês futuro — valores previstos com base em despesas fixas e parcelas agendadas</div>`
       : '';
+    var _prevLabel = monthLabel(addMonths(ym, -1));
     kEl.innerHTML = futureBanner + kpis.map(function(k) {
       var valStr = k.raw ? k.v : fmt(k.v);
-      var fs = valStr.length > 9 ? '1rem' : valStr.length > 7 ? '1.1rem' : '1.2rem';
+      var fs = valStr.length > 9 ? '1.5rem' : valStr.length > 7 ? '1.7rem' : '1.9rem';
       var subHtml = k.sub ? `<div style="font-size:.6rem;color:var(--ylw);margin-top:.1rem">${k.sub}</div>` : '';
-      return `<div class="kc" style="--_a:${k.a};${isFutureYm?'opacity:.6':''}"><div class="klbl">${k.l}</div><div class="kval-row"><div class="kval" style="color:${k.c};font-size:${fs}">${valStr}</div>${k.tr||''}</div>${subHtml}</div>`;
+      var compHtml = k.tr ? `<div class="ksub" style="margin-top:.3rem">${k.tr} <span style="opacity:.6">vs ${_prevLabel}</span></div>` : '';
+      return `<div class="kc" style="--_a:${k.a};${isFutureYm?'opacity:.6':''}"><div class="klbl">${k.l}</div><div class="kval" style="color:${k.c};font-size:${fs}">${valStr}</div>${compHtml}${subHtml}</div>`;
     }).join('');
   }
 
