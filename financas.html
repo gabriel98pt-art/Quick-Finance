@@ -53,9 +53,9 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;background:
 /* TABS */
 .tabs{background:var(--s1);border-bottom:1px solid var(--brd);display:flex;justify-content:center;align-items:center;gap:.2rem;overflow-x:auto;padding:.45rem .75rem;scrollbar-width:none;-webkit-overflow-scrolling:touch}
 .tabs::-webkit-scrollbar{display:none}
-.tb{background:none;border:none;border-radius:8px;color:var(--mut);cursor:pointer;padding:.38rem .8rem;font-size:.73rem;font-weight:600;white-space:nowrap;transition:background var(--tr),color var(--tr);line-height:1.4}
-.tb.on{background:var(--blu);color:#fff}
-.tb:hover:not(.on){background:var(--s2);color:var(--txt)}
+.tb{background:none;border:1px solid transparent;border-radius:8px;color:var(--mut);cursor:pointer;padding:.38rem .85rem;font-size:.73rem;font-weight:600;white-space:nowrap;transition:background var(--tr),color var(--tr),border-color var(--tr),box-shadow var(--tr);line-height:1.4}
+.tb.on{background:linear-gradient(135deg,var(--blu) 0%,var(--pur) 100%);color:#fff;border-color:transparent;box-shadow:0 2px 12px rgba(77,143,255,.4)}
+.tb:hover:not(.on){background:var(--s2);color:var(--txt);border-color:var(--brd)}
 
 /* PANELS */
 .pnl{display:none;padding:1rem;max-width:1400px;margin:0 auto}
@@ -63,7 +63,7 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;background:
 @media(min-width:600px){.pnl{padding:1.25rem 1.5rem}}
 
 /* LABELS */
-.slbl{font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--mut);margin-bottom:.5rem}
+.slbl{font-size:.63rem;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:var(--txt);opacity:.7;margin-bottom:.5rem}
 
 /* KPI */
 .kg{display:grid;grid-template-columns:repeat(2,1fr);gap:.6rem;margin-bottom:1rem}
@@ -366,13 +366,18 @@ code{background:var(--s2);padding:.1rem .35rem;border-radius:4px;font-size:.8em}
 }
 
 /* ── QUICK-ADD FAB ──────────────────────────────────────────── */
-.qfab{position:fixed;bottom:1.2rem;right:1.1rem;z-index:500;
-      width:38px;height:38px;border-radius:50%;border:1px solid var(--brd);cursor:pointer;
-      background:var(--s2);color:var(--mut);font-size:1.2rem;font-weight:700;
-      box-shadow:0 2px 8px rgba(0,0,0,.25);transition:transform .15s,background .15s;
-      display:flex;align-items:center;justify-content:center;line-height:1}
-.qfab:hover{background:var(--s3);color:var(--txt)}
-.qfab:active{transform:scale(.9)}
+@keyframes _fabPulse{0%,100%{box-shadow:0 4px 22px rgba(77,143,255,.45),0 2px 8px rgba(0,0,0,.3)}
+  50%{box-shadow:0 4px 30px rgba(77,143,255,.7),0 2px 8px rgba(0,0,0,.3)}}
+.qfab{position:fixed;bottom:1.4rem;right:1.2rem;z-index:500;
+      width:54px;height:54px;border-radius:50%;border:none;cursor:pointer;
+      background:linear-gradient(135deg,var(--blu) 0%,var(--pur) 100%);
+      color:#fff;font-size:1.55rem;font-weight:700;
+      box-shadow:0 4px 22px rgba(77,143,255,.45),0 2px 8px rgba(0,0,0,.3);
+      transition:transform .22s cubic-bezier(.34,1.56,.64,1),box-shadow .2s;
+      display:flex;align-items:center;justify-content:center;line-height:1;
+      animation:_fabPulse 3s ease-in-out infinite}
+.qfab:hover{transform:scale(1.1);box-shadow:0 8px 32px rgba(77,143,255,.6),0 3px 12px rgba(0,0,0,.35);animation:none}
+.qfab:active{transform:scale(.91);animation:none}
 .qov{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:510;
      opacity:0;pointer-events:none;transition:opacity .22s}
 .qov.on{opacity:1;pointer-events:auto}
@@ -556,7 +561,7 @@ tr.swipe-del{background:rgba(255,84,112,.28)!important;transition:background .15
   <div class="dash-grid">
     <!-- Coluna esquerda: donut + categorias -->
     <div class="cc" style="height:100%;display:flex;flex-direction:column;box-sizing:border-box;min-width:0">
-      <div class="slbl">Despesas por Categoria</div>
+      <div class="slbl">📊 Despesas por Categoria</div>
       <div style="flex:1;display:flex;flex-direction:column;align-items:center">
         <canvas id="chDnt" style="width:100%"></canvas>
         <div id="dCatBreak" style="margin-top:.75rem;width:100%"></div>
@@ -566,19 +571,19 @@ tr.swipe-del{background:rgba(255,84,112,.28)!important;transition:background .15
     <div style="display:flex;flex-direction:column;gap:.75rem;height:100%;min-width:0">
       <div class="tc" style="margin-bottom:0;flex:3;display:flex;flex-direction:column">
         <div class="tch" style="padding:.5rem 1rem">
-          <span class="slbl" style="margin:0">Orçamento vs Real</span>
+          <span class="slbl" style="margin:0">🎯 Orçamento vs Real</span>
           <button class="ic" onclick="toggleBudEdit()" title="Filtrar categorias no orçamento" style="font-size:.85rem;width:28px;height:28px">✏</button>
         </div>
         <div id="budEditPanel" style="display:none;padding:.75rem 1rem;border-bottom:1px solid var(--brd);background:var(--s2)"></div>
         <div class="tw" id="dBudget" style="flex:1"></div>
       </div>
       <div class="tc" style="margin-bottom:0;flex:1;display:flex;flex-direction:column">
-        <div class="tch" style="padding:.5rem 1rem"><span class="slbl" style="margin:0">Poupança — Meta vs Real</span></div>
+        <div class="tch" style="padding:.5rem 1rem"><span class="slbl" style="margin:0">💰 Poupança — Meta vs Real</span></div>
         <div id="dSav" style="padding:.6rem 1rem;flex:1"></div>
       </div>
       <div class="tc" style="margin-bottom:0;flex:2;display:flex;flex-direction:column">
         <div class="tch" style="padding:.5rem 1rem">
-          <span class="slbl" style="margin:0">Resumo Anual</span>
+          <span class="slbl" style="margin:0">📅 Resumo Anual</span>
           <div class="mnav" style="margin:0">
             <button onclick="miniAnnNav(-1)" style="padding:.25rem .6rem;font-size:.9rem">‹</button>
             <span class="mnav-lbl" id="miniAnnLbl" style="min-width:48px;font-size:.78rem"></span>
@@ -594,10 +599,10 @@ tr.swipe-del{background:rgba(255,84,112,.28)!important;transition:background .15
 <!-- RECEITAS -->
 <div class="pnl" id="p-receitas">
   <div class="kg mb2" id="recKpis"></div>
-  <div class="cc mb2" id="recMiniChart" style="display:none"><div class="slbl">Evolução — últimos 6 meses</div><canvas id="chRecMini" style="max-height:130px"></canvas></div>
+  <div class="cc mb2" id="recMiniChart" style="display:none"><div class="slbl">📈 Evolução — últimos 6 meses</div><canvas id="chRecMini" style="max-height:130px"></canvas></div>
   <div class="tc">
     <div class="tch">
-      <span class="slbl" style="margin:0">Registos</span>
+      <span class="slbl" style="margin:0">📋 Registos</span>
       <button class="btn pri sm" onclick="openModal('receita')">+ Adicionar</button>
     </div>
     <div class="srch-bar">
@@ -620,7 +625,7 @@ tr.swipe-del{background:rgba(255,84,112,.28)!important;transition:background .15
   <div id="despProx"></div>
   <div class="tc mb2">
     <div class="tch">
-      <span class="slbl" style="margin:0">Despesas Fixas</span>
+      <span class="slbl" style="margin:0">📌 Despesas Fixas</span>
       <div class="row g2">
         <button class="ic tip" id="eyeBtn_df" data-tip="Mostrar/esconder" onclick="_toggleVis('dfCollapse','eyeBtn_df')" style="font-size:.8rem;width:28px;height:28px"></button>
         <button class="btn pri sm" onclick="openModal('dfixa')">+ Adicionar</button>
@@ -634,7 +639,7 @@ tr.swipe-del{background:rgba(255,84,112,.28)!important;transition:background .15
   <div class="tc mb2">
     <div class="tch">
       <div class="row g2" style="align-items:center;flex-wrap:wrap;gap:.35rem">
-        <span class="slbl" style="margin:0">Despesas Correntes</span>
+        <span class="slbl" style="margin:0">💸 Despesas Correntes</span>
         <span id="dcFilterLbl" style="display:none" class="bdg gy">📅 filtro ativo</span>
       </div>
       <div class="row g2">
@@ -759,7 +764,7 @@ tr.swipe-del{background:rgba(255,84,112,.28)!important;transition:background .15
   </div>
   <div class="tc">
     <div class="tch">
-      <span class="slbl" style="margin:0">Eventos Personalizados</span>
+      <span class="slbl" style="margin:0">📅 Eventos Personalizados</span>
       <button class="btn pri sm" onclick="openModal('evt')">+ Adicionar</button>
     </div>
     <div class="tw"><table>
@@ -772,10 +777,10 @@ tr.swipe-del{background:rgba(255,84,112,.28)!important;transition:background .15
 <!-- CARTÕES -->
 <div class="pnl" id="p-cartoes">
   <div class="kg mb2" id="ctCards"></div>
-  <div class="cc mb2"><div class="slbl">Gastos por Cartão</div><canvas id="chCt"></canvas></div>
+  <div class="cc mb2"><div class="slbl">💳 Gastos por Cartão</div><canvas id="chCt"></canvas></div>
   <div class="tc">
     <div class="tch">
-      <span class="slbl" style="margin:0">Fluxo Consolidado</span>
+      <span class="slbl" style="margin:0">📈 Fluxo Consolidado</span>
       <div class="row g2">
         <button class="btn pri sm" onclick="openModal('trf')">⇄ Transferência</button>
         <select class="sel" id="ctFilt" onchange="renderCartoes()" style="max-width:160px">
@@ -795,12 +800,12 @@ tr.swipe-del{background:rgba(255,84,112,.28)!important;transition:background .15
   <div class="kg mb2" id="metaKpis"></div>
   <div class="cc mb2" id="metaSav"></div>
   <div class="funds-hdr">
-    <span class="slbl" style="margin:0">Fundos de Poupança</span>
+    <span class="slbl" style="margin:0">🏦 Fundos de Poupança</span>
     <span class="tmut" id="fundsTotalLbl" style="font-size:.75rem"></span>
     <button class="btn pri sm" onclick="openModal('fund')" style="margin-left:auto">+ Novo Fundo</button>
   </div>
   <div class="fcards mb2" id="fundCards"></div>
-  <div class="tc mb2"><div class="tch"><span class="slbl" style="margin:0">Resumo Anual</span></div><div class="tw" id="annT"></div></div>
+  <div class="tc mb2"><div class="tch"><span class="slbl" style="margin:0">📅 Resumo Anual</span></div><div class="tw" id="annT"></div></div>
   <div class="cc mb2"><div class="slbl">Anual</div><canvas id="chAnn" style="height:190px"></canvas></div>
 </div>
 
