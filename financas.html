@@ -75,7 +75,7 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;background:
 .kc:hover{transform:translateY(-2px)}
 .kc::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:var(--_a,var(--blu))}
 .klbl{font-size:.63rem;color:var(--mut);font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-bottom:.3rem}
-.kval{font-size:1.9rem;font-weight:800;line-height:1.1;letter-spacing:-.03em}
+.kval{font-size:1.15rem;font-weight:800;line-height:1.1;letter-spacing:-.02em}
 .ksub{font-size:.62rem;color:var(--mut);margin-top:.22rem}
 
 /* CHART */
@@ -2225,7 +2225,7 @@ function renderDashboard() {
     var _prevLabel = monthLabel(addMonths(ym, -1));
     kEl.innerHTML = futureBanner + kpis.map(function(k) {
       var valStr = k.raw ? k.v : fmt(k.v);
-      var fs = valStr.length > 9 ? '1.5rem' : valStr.length > 7 ? '1.7rem' : '1.9rem';
+      var fs = valStr.length > 9 ? '1rem' : valStr.length > 7 ? '1.1rem' : '1.2rem';
       var subHtml = k.sub ? `<div style="font-size:.6rem;color:var(--ylw);margin-top:.1rem">${k.sub}</div>` : '';
       var compHtml = k.tr ? `<div class="ksub" style="margin-top:.3rem">${k.tr} <span style="opacity:.6">vs ${_prevLabel}</span></div>` : '';
       return `<div class="kc" style="--_a:${k.a};${isFutureYm?'opacity:.6':''}"><div class="klbl">${k.l}</div><div class="kval" style="color:${k.c};font-size:${fs}">${valStr}</div>${compHtml}${subHtml}</div>`;
