@@ -218,7 +218,11 @@ tbody.anim tr:nth-child(n+6){animation-delay:.14s}
 .ss:last-child{border-bottom:none}
 .ss h4{font-size:.6rem;font-weight:800;color:var(--mut);margin-bottom:.6rem;text-transform:uppercase;letter-spacing:.09em}
 .tl{display:flex;flex-wrap:wrap;gap:.3rem;min-height:1.4rem}
-.tag{background:var(--s2);border:1px solid var(--brd);border-radius:20px;padding:.18rem .55rem .18rem .65rem;font-size:.72rem;display:flex;align-items:center;gap:.2rem}
+.tag{background:var(--s2);border:1px solid var(--brd);border-radius:20px;padding:.18rem .55rem .18rem .65rem;font-size:.72rem;display:flex;align-items:center;gap:.2rem;transition:opacity .15s,outline .15s}
+.tag.dragging{opacity:.35}
+.tag.drag-over{outline:2px solid var(--blu);background:rgba(77,143,255,.1)}
+.tag-dh{cursor:grab;color:var(--mut);font-size:.68rem;opacity:.45;user-select:none;padding:.1rem .1rem .1rem 0;line-height:1}
+.tag-dh:active{cursor:grabbing}
 .te{cursor:pointer;color:var(--mut);font-size:.65rem;padding:.1rem .2rem;border-radius:4px;line-height:1}
 .te:hover{color:var(--blu);background:rgba(77,143,255,.15)}
 .tx{cursor:pointer;color:var(--mut);font-size:.65rem;padding:.1rem .2rem;border-radius:4px;line-height:1}
@@ -4333,7 +4337,7 @@ function openSettings() {
   var c = S.cfg;
   var h = '';
 
-  function tag(type, x) {
+  function tag(type, x, idx) {
     var es = x.replace(/'/g,"\\'");
     var hasColor = ['ccat','fcat','src','vcat'].indexOf(type) >= 0;
     var cpHtml = '';
@@ -4341,9 +4345,14 @@ function openSettings() {
       var curCol = (S.cfg.catColors||{})[type+':'+x] || getDefaultCatColor(type, x);
       cpHtml = '<input type="color" value="'+curCol+'" onchange="setCatColor(\''+type+'\',\''+es+'\',this.value)" style="width:15px;height:15px;border:none;background:none;cursor:pointer;padding:0;border-radius:3px;flex-shrink:0;margin-right:.15rem" title="Cor da categoria">';
     }
-    return '<span class="tag">'+cpHtml+_esc(x)+'<span class="te" onclick="editTag(\''+type+'\',\''+es+'\')" title="Renomear">✏</span><span class="tx" onclick="removeTag(\''+type+'\',\''+es+'\')" title="Remover">✕</span></span>';
+    return '<span class="tag" draggable="true" ondragstart="_tagDragStart(event,\''+type+'\','+idx+')" ondragover="_tagDragOver(event)" ondrop="_tagDrop(event,\''+type+'\','+idx+')" ondragend="_tagDragEnd()">'
+      +'<span class="tag-dh" title="Arrastar para reordenar">⠿</span>'
+      +cpHtml+_esc(x)
+      +'<span class="te" onclick="editTag(\''+type+'\',\''+es+'\')" title="Renomear">✏</span>'
+      +'<span class="tx" onclick="removeTag(\''+type+'\',\''+es+'\')" title="Remover">✕</span>'
+      +'</span>';
   }
-  function tagList(list, type) { return (list||[]).map(function(x){return tag(type,x);}).join(''); }
+  function tagList(list, type) { return (list||[]).map(function(x,i){return tag(type,x,i);}).join(''); }
   function addRow(id, ph) { return `<div class="atr"><input class="fi" id="${id}" placeholder="${ph}" style="flex:1" onkeydown="if(event.key==='Enter')addTag('${id.replace('si_','')}')"><button class="btn sec sm" onclick="addTag('${id.replace('si_','')}')">+</button></div>`; }
 
   // ── 1. Listas ──
@@ -4537,6 +4546,33 @@ function removeTag(type, val) {
   S.cfg[type] = (S.cfg[type]||[]).filter(function(x){return x!==val;});
   saveState();
   openSettings();
+}
+
+var _tdSrc = null, _tdType = null;
+function _tagDragStart(e, type, idx) {
+  _tdSrc = idx; _tdType = type;
+  e.dataTransfer.effectAllowed = 'move';
+  e.currentTarget.classList.add('dragging');
+}
+function _tagDragOver(e) {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+  document.querySelectorAll('.tag.drag-over').forEach(function(el){ el.classList.remove('drag-over'); });
+  var t = e.currentTarget; if (t) t.classList.add('drag-over');
+}
+function _tagDrop(e, type, idx) {
+  e.preventDefault();
+  document.querySelectorAll('.tag.drag-over,.tag.dragging').forEach(function(el){ el.classList.remove('drag-over','dragging'); });
+  if (_tdSrc === null || _tdSrc === idx || _tdType !== type) { _tdSrc=null; _tdType=null; return; }
+  var arr = (S.cfg[type]||[]).slice();
+  arr.splice(idx, 0, arr.splice(_tdSrc, 1)[0]);
+  S.cfg[type] = arr;
+  _tdSrc = null; _tdType = null;
+  saveState(); openSettings();
+}
+function _tagDragEnd() {
+  document.querySelectorAll('.tag.dragging,.tag.drag-over').forEach(function(el){ el.classList.remove('dragging','drag-over'); });
+  _tdSrc = null; _tdType = null;
 }
 
 function addTag(type) {
