@@ -84,7 +84,7 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;background:
 .dash-grid{display:grid;grid-template-columns:1fr;gap:.75rem;align-items:stretch;margin-bottom:.75rem}
 @media(min-width:768px){.dash-grid{grid-template-columns:1fr 1fr}}
 .cc{background:var(--s1);border:1px solid var(--brd);border-radius:var(--r);padding:1rem 1.1rem;box-shadow:var(--sh-sm)}
-.cc canvas{max-height:200px}
+.cc canvas{max-height:240px}
 
 /* TABLE */
 .tc{background:var(--s1);border:1px solid var(--brd);border-radius:var(--r);overflow:hidden;margin-bottom:.75rem;box-shadow:var(--sh-sm)}
@@ -622,7 +622,7 @@ tr.swipe-del{background:rgba(255,84,112,.28)!important;transition:background .15
         <div id="budEditPanel" style="display:none;padding:.75rem 1rem;border-bottom:1px solid var(--brd);background:var(--s2)"></div>
         <div class="tw" id="dBudget" style="flex:1"></div>
       </div>
-      <div class="tc" style="margin-bottom:0;flex:1;display:flex;flex-direction:column">
+      <div class="tc" style="margin-bottom:0;flex:2;display:flex;flex-direction:column">
         <div class="tch" style="padding:.5rem 1rem"><span class="slbl" style="margin:0">💰 Poupança — Meta vs Real</span></div>
         <div id="dSav" style="padding:.6rem 1rem;flex:1"></div>
       </div>
