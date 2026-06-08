@@ -2422,30 +2422,19 @@ function renderDashboard() {
     _savBadge = sld >= goal ? '🟢 Na meta' : '🔴 Fora da meta';
     _savBadgeCls = sld >= goal ? 'gg' : 'gr';
   }
-  var _restLbl = _remain > 0 ? 'Falta' : 'Excesso';
-  var _restVal = fmt(Math.abs(_remain));
-  var _restCol = _remain > 0 ? 'var(--red)' : 'var(--grn)';
+  var _restTxt = _remain > 0 ? 'faltam '+fmt(_remain) : 'excesso '+fmt(-_remain);
   var savEl = document.getElementById('dSav');
   if (savEl) savEl.innerHTML = `
-    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;margin-bottom:.55rem">
-      <div class="kc" style="--_a:${sc};min-height:0;padding:.6rem .5rem">
-        <div class="klbl">Real</div>
-        <div class="kval" style="font-size:.95rem;color:${sc}">${fmt(sld)}</div>
-        <div class="ksub"><span class="bdg ${_savBadgeCls}" style="font-size:.62rem;padding:.1rem .35rem">${_savBadge}</span></div>
-      </div>
-      <div class="kc" style="--_a:var(--blu);min-height:0;padding:.6rem .5rem">
-        <div class="klbl">Meta</div>
-        <div class="kval" style="font-size:.95rem">${fmt(goal)}</div>
-        <div class="ksub">${pct2}%</div>
-      </div>
-      <div class="kc" style="--_a:${_restCol};min-height:0;padding:.6rem .5rem">
-        <div class="klbl">${_restLbl}</div>
-        <div class="kval" style="font-size:.95rem;color:${_restCol}">${_restVal}</div>
-        <div class="ksub">${_isClosed ? 'encerrado' : 'este mês'}</div>
-      </div>
+    <div style="display:flex;align-items:baseline;gap:.45rem;margin-bottom:.18rem">
+      <span style="font-size:1.35rem;font-weight:800;color:${sc};line-height:1">${fmt(sld)}</span>
+      <span style="font-size:.78rem;color:var(--mut);font-weight:500">/ ${fmt(goal)}</span>
+      <span class="bdg ${_savBadgeCls}" style="font-size:.68rem;margin-left:auto">${_savBadge}</span>
     </div>
-    <div style="height:6px;background:var(--s3);border-radius:3px;overflow:hidden">
-      <div style="height:100%;width:${pct2}%;background:${sc};border-radius:3px;transition:width .6s ease"></div>
+    <div style="display:flex;justify-content:space-between;font-size:.68rem;color:var(--mut);margin-bottom:.45rem">
+      <span>${_restTxt}</span><span>${pct2}%</span>
+    </div>
+    <div style="height:8px;background:var(--s3);border-radius:4px;overflow:hidden">
+      <div style="height:100%;width:${pct2}%;background:${sc};border-radius:4px;transition:width .6s ease"></div>
     </div>`;
   renderMiniAnnual();
 }
