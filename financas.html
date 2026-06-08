@@ -472,6 +472,27 @@ tr.swipe-del{background:rgba(255,84,112,.28)!important;transition:background .15
 /* iOS install banner */
 .ios-install{background:var(--s2);border-bottom:1px solid var(--brd);padding:.55rem 1rem;display:flex;align-items:center;gap:.6rem;font-size:.75rem}
 .ios-install button{background:none;border:none;color:var(--mut);cursor:pointer;font-size:.9rem;margin-left:auto;padding:.1rem .3rem}
+
+/* GLOBAL SEARCH MODAL */
+.gsrch-over{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:2000;display:none;align-items:flex-start;justify-content:center;padding:5vh 1rem 1rem;backdrop-filter:blur(4px)}
+.gsrch-over.on{display:flex}
+.gsrch-box{background:var(--s1);border:1px solid var(--brd);border-radius:16px;width:100%;max-width:540px;overflow:hidden;box-shadow:0 24px 60px rgba(0,0,0,.55);animation:su .18s ease}
+.gsrch-inp-row{display:flex;align-items:center;gap:.5rem;padding:.75rem 1rem;border-bottom:1px solid var(--brd)}
+.gsrch-inp{flex:1;background:none;border:none;outline:none;font-size:.95rem;color:var(--txt);font-family:inherit}
+.gsrch-inp::placeholder{color:var(--mut)}
+.gsrch-kbd{font-size:.65rem;color:var(--mut);background:var(--s2);border:1px solid var(--brd);border-radius:4px;padding:.1rem .35rem;white-space:nowrap;cursor:pointer}
+.gsrch-list{max-height:60vh;overflow-y:auto}
+.gsrch-grp{font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--mut);padding:.6rem 1rem .2rem}
+.gsrch-row{display:flex;align-items:center;gap:.6rem;padding:.52rem 1rem;cursor:pointer;transition:background var(--tr)}
+.gsrch-row:hover,.gsrch-row.gfocus{background:rgba(77,143,255,.08)}
+.gsrch-ico{font-size:.85rem;flex-shrink:0;width:20px;text-align:center}
+.gsrch-body{flex:1;min-width:0}
+.gsrch-name{font-size:.82rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gsrch-sub{font-size:.67rem;color:var(--mut);margin-top:.03rem}
+.gsrch-val{font-size:.82rem;font-weight:700;flex-shrink:0;white-space:nowrap}
+.gsrch-empty{text-align:center;padding:2rem 1rem;color:var(--mut);font-size:.82rem}
+.gsrch-hint{text-align:center;padding:1.8rem 1rem;color:var(--mut);font-size:.78rem;line-height:1.6}
+.gsrch-more{text-align:center;padding:.6rem 1rem;color:var(--mut);font-size:.7rem;border-top:1px solid var(--brd)}
 /* calendar legend */
 .cal-legend{display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:.6rem}
 /* calendar overflow indicator */
@@ -511,6 +532,8 @@ tr.swipe-del{background:rgba(255,84,112,.28)!important;transition:background .15
 <header class="hdr">
   <div class="logo">Finanças<em>.</em></div>
   <div class="hdr-r">
+    <button class="ib tip" data-tip="Pesquisar (⌘K)" onclick="openSearch()" style="font-size:.9rem">🔍</button>
+    <div class="sep"></div>
     <button class="ib tip" data-tip="Desfazer" id="undoBtn" onclick="undo()" disabled>↩️</button>
     <button class="ib tip" data-tip="Refazer" id="redoBtn" onclick="redo()" disabled>↪️</button>
     <div class="sep"></div>
@@ -540,7 +563,7 @@ tr.swipe-del{background:rgba(255,84,112,.28)!important;transition:background .15
   <button class="tb" onclick="sw('veiculo',this)">🚘 Veículo</button>
   <button class="tb" onclick="sw('parcelas',this)">💳 Parcelas</button>
   <button class="tb" onclick="sw('cal',this)">📅 Calendário</button>
-  <button class="tb" onclick="sw('cartoes',this)">👛 Cartões</button>
+  <button class="tb" onclick="sw('cartoes',this)">🏦 Cartões</button>
   <button class="tb" onclick="sw('metas',this)">🎯 Metas</button>
   <button class="tb" onclick="sw('import',this)">📥 Importar</button>
 </nav>
@@ -3198,7 +3221,7 @@ function renderCartoes() {
   // Empty state when no cards configured
   var ctEl = document.getElementById('ctCards');
   if (ctEl && methods.length === 0) {
-    ctEl.innerHTML = _emptyDiv('👛','Nenhum cartão configurado','Adiciona cartões nas Definições → Contas');
+    ctEl.innerHTML = _emptyDiv('🏦','Nenhum cartão configurado','Adiciona cartões nas Definições → Contas');
     return;
   }
   if (ctEl) ctEl.innerHTML = methods.map(function(card, i) {
@@ -3339,7 +3362,7 @@ function renderCartoes() {
   if (ctPg) ctPg.style.display = 'none';
 
   if (!filteredCards.length) {
-    ctBody.innerHTML = _emptyRow(5,'👛','Nenhum cartão configurado','Adiciona cartões nas Definições');
+    ctBody.innerHTML = _emptyRow(5,'🏦','Nenhum cartão configurado','Adiciona cartões nas Definições');
     return;
   }
 
@@ -3425,7 +3448,7 @@ function renderCartoes() {
     });
   });
 
-  ctBody.innerHTML = html || _emptyRow(5,'👛','Nenhuma transação em '+monthLabel(ym),'Regista receitas e despesas para ver aqui');
+  ctBody.innerHTML = html || _emptyRow(5,'🏦','Nenhuma transação em '+monthLabel(ym),'Regista receitas e despesas para ver aqui');
 }
 
 // ================================================================
@@ -7174,6 +7197,156 @@ function toggleDashCmp() {
 }
 
 // ================================================================
+// GLOBAL SEARCH
+// ================================================================
+var _gsrchFocusIdx = -1;
+
+function openSearch() {
+  var m = document.getElementById('gsrchOver');
+  if (!m) return;
+  m.classList.add('on');
+  var inp = document.getElementById('gsrchInput');
+  if (inp) { inp.value = ''; setTimeout(function(){ inp.focus(); }, 40); }
+  document.getElementById('gsrchList').innerHTML =
+    '<div class="gsrch-hint">Escreve para pesquisar em todos os lançamentos<br><span style="font-size:.7rem;opacity:.6">receitas · despesas · fixas · parcelas · veículo</span></div>';
+  _gsrchFocusIdx = -1;
+}
+
+function closeSearch() {
+  var m = document.getElementById('gsrchOver');
+  if (m) m.classList.remove('on');
+}
+
+function _gsrchBg(e) { if (e.target.id === 'gsrchOver') closeSearch(); }
+
+function _gsrchKey(e) {
+  var items = document.querySelectorAll('#gsrchList .gsrch-row');
+  if (e.key === 'Escape') { closeSearch(); return; }
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    _gsrchFocusIdx = Math.min(_gsrchFocusIdx + 1, items.length - 1);
+    _gsrchHilight(items);
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    _gsrchFocusIdx = Math.max(_gsrchFocusIdx - 1, 0);
+    _gsrchHilight(items);
+  } else if (e.key === 'Enter' && _gsrchFocusIdx >= 0 && items[_gsrchFocusIdx]) {
+    items[_gsrchFocusIdx].click();
+  }
+}
+
+function _gsrchHilight(items) {
+  items.forEach(function(el, i) { el.classList.toggle('gfocus', i === _gsrchFocusIdx); });
+  if (items[_gsrchFocusIdx]) items[_gsrchFocusIdx].scrollIntoView({block:'nearest'});
+}
+
+function _gsrchRun(q) {
+  _gsrchFocusIdx = -1;
+  var el = document.getElementById('gsrchList');
+  if (!q || q.trim().length < 2) {
+    el.innerHTML = '<div class="gsrch-hint">Escreve para pesquisar em todos os lançamentos<br><span style="font-size:.7rem;opacity:.6">receitas · despesas · fixas · parcelas · veículo</span></div>';
+    return;
+  }
+  var lq = q.toLowerCase();
+  var results = [];
+
+  (S.rec || []).forEach(function(r) {
+    var txt = [(r.src||''),(r.acc||''),(r.notes||'')].join(' ').toLowerCase();
+    if (txt.indexOf(lq) >= 0 || String(r.val||'').indexOf(lq) >= 0)
+      results.push({type:'rec',ico:'💰',label:r.src||'Receita',sub:_gsrchSub([r.date,r.acc,r.notes]),val:r.val,sign:1,tab:'receitas'});
+  });
+
+  (S.dc || []).forEach(function(d) {
+    var txt = [(d.desc||''),(d.cat||''),(d.pay||''),(d.notes||'')].join(' ').toLowerCase();
+    if (txt.indexOf(lq) >= 0 || String(d.val||'').indexOf(lq) >= 0)
+      results.push({type:'dc',ico:'💸',label:d.desc||'Despesa',sub:_gsrchSub([d.date,d.cat,d.pay]),val:d.val,sign:-1,tab:'despesas'});
+  });
+
+  (S.df || []).forEach(function(d) {
+    var txt = [(d.name||''),(d.cat||''),(d.pay||'')].join(' ').toLowerCase();
+    if (txt.indexOf(lq) >= 0 || String(d.val||'').indexOf(lq) >= 0)
+      results.push({type:'df',ico:'📌',label:d.name||'Fixa',sub:_gsrchSub([d.cat,d.pay]),val:d.val,sign:-1,tab:'despesas'});
+  });
+
+  (S.par || []).forEach(function(p) {
+    var txt = (p.name||'').toLowerCase();
+    if (txt.indexOf(lq) >= 0 || String(p.vp||'').indexOf(lq) >= 0)
+      results.push({type:'par',ico:'💳',label:p.name||'Parcela',sub:_gsrchSub([p.fd&&p.fd.slice(0,7),p.ld&&p.ld.slice(0,7)],true),val:p.vp,sign:-1,tab:'parcelas'});
+  });
+
+  ((S.veh && S.veh.cg)||[]).forEach(function(v) {
+    var txt = [(v.loc||''),'veículo carga'].join(' ').toLowerCase();
+    if (txt.indexOf(lq) >= 0 || String(v.val||'').indexOf(lq) >= 0)
+      results.push({type:'veh',ico:'⚡',label:'Carga Elétrica',sub:_gsrchSub([v.date,v.loc,v.kwh!=null?v.kwh+' kWh':null]),val:v.val,sign:-1,tab:'veiculo'});
+  });
+
+  ((S.veh && S.veh.lp)||[]).forEach(function(v) {
+    var txt = [(v.desc||''),(v.cat||''),'veículo'].join(' ').toLowerCase();
+    if (txt.indexOf(lq) >= 0 || String(v.val||'').indexOf(lq) >= 0)
+      results.push({type:'veh',ico:'🚘',label:v.desc||'Veículo',sub:_gsrchSub([v.date,v.cat]),val:v.val,sign:-1,tab:'veiculo'});
+  });
+
+  results.sort(function(a,b) {
+    var da = (a.sub||'0000').slice(0,10), db = (b.sub||'0000').slice(0,10);
+    return da < db ? 1 : da > db ? -1 : 0;
+  });
+
+  if (!results.length) {
+    el.innerHTML = '<div class="gsrch-empty">Sem resultados para <strong>' + _esc(q) + '</strong></div>';
+    return;
+  }
+
+  var shown = results.slice(0, 25);
+  var groups = {}, order = [];
+  var gNames = {rec:'Receitas',dc:'Despesas Correntes',df:'Despesas Fixas',par:'Parcelas',veh:'Veículo'};
+  shown.forEach(function(r) {
+    if (!groups[r.type]) { groups[r.type] = []; order.push(r.type); }
+    groups[r.type].push(r);
+  });
+
+  var html = '';
+  order.forEach(function(type) {
+    html += '<div class="gsrch-grp">' + (gNames[type]||type) + '</div>';
+    groups[type].forEach(function(r) {
+      var vStr = r.val != null ? (r.sign < 0 ? '−' : '+') + fmt(r.val) : '';
+      var vCol = r.sign < 0 ? 'var(--red)' : 'var(--grn)';
+      html += '<div class="gsrch-row" onclick="_gsrchGo(\'' + r.tab + '\')">' +
+        '<span class="gsrch-ico">' + r.ico + '</span>' +
+        '<div class="gsrch-body">' +
+          '<div class="gsrch-name">' + _esc(r.label) + '</div>' +
+          (r.sub ? '<div class="gsrch-sub">' + _esc(r.sub) + '</div>' : '') +
+        '</div>' +
+        (vStr ? '<span class="gsrch-val" style="color:' + vCol + '">' + vStr + '</span>' : '') +
+      '</div>';
+    });
+  });
+
+  if (results.length > 25)
+    html += '<div class="gsrch-more">+ ' + (results.length - 25) + ' resultados — refina a pesquisa</div>';
+
+  el.innerHTML = html;
+}
+
+function _gsrchSub(parts, arrow) {
+  var filtered = (parts||[]).filter(function(p){ return p != null && p !== ''; });
+  return filtered.join(arrow ? ' → ' : ' · ');
+}
+
+function _gsrchGo(tab) {
+  closeSearch();
+  var btn = document.querySelector('.tb[onclick*="\'' + tab + '\'"]');
+  if (btn) btn.click();
+}
+
+document.addEventListener('keydown', function(e) {
+  if ((e.metaKey || e.ctrlKey) && e.key === 'k') { e.preventDefault(); openSearch(); return; }
+  if (e.key === 'Escape') {
+    var m = document.getElementById('gsrchOver');
+    if (m && m.classList.contains('on')) { closeSearch(); e.stopPropagation(); }
+  }
+});
+
+// ================================================================
 // SETTINGS TABS
 // ================================================================
 var _setTab = 'listas';
@@ -7309,6 +7482,22 @@ function _impBankFile(bank) {
   }
 })();
 </script>
+
+<!-- GLOBAL SEARCH MODAL -->
+<div class="gsrch-over" id="gsrchOver" onclick="_gsrchBg(event)">
+  <div class="gsrch-box">
+    <div class="gsrch-inp-row">
+      <span style="font-size:1rem;color:var(--mut)">🔍</span>
+      <input class="gsrch-inp" id="gsrchInput" type="search" placeholder="Pesquisar lançamentos…"
+             autocomplete="off" spellcheck="false"
+             oninput="_gsrchRun(this.value)" onkeydown="_gsrchKey(event)">
+      <span class="gsrch-kbd" onclick="closeSearch()">Esc</span>
+    </div>
+    <div class="gsrch-list" id="gsrchList">
+      <div class="gsrch-hint">Escreve para pesquisar em todos os lançamentos<br><span style="font-size:.7rem;opacity:.6">receitas · despesas · fixas · parcelas · veículo</span></div>
+    </div>
+  </div>
+</div>
 
 <!-- QUICK-ADD FAB -->
 <button class="qfab" id="qFab" onclick="qOpen()" title="Registo rápido">＋</button>
