@@ -704,6 +704,11 @@ tr.swipe-del{background:rgba(255,84,112,.28)!important;transition:background .15
       <input id="dcSearch" type="search" placeholder="🔍 Pesquisar…" oninput="DC_SEARCH=this.value;DC_PG=1;renderDespesas()" value="">
       <select id="dcCardFilt" onchange="DC_CARD=this.value;DC_PG=1;renderDespesas()"><option value="all">Todos os cartões</option></select>
       <button class="srch-pin" id="dcWeekBtn" onclick="toggleDcWeek()" title="Semana actual (Seg–Dom)">📅 Sem</button>
+      <div id="dcWeekNav" style="display:none;align-items:center;gap:.18rem">
+        <button class="srch-pin" onclick="_dcWeekNav(-1)" style="padding:.18rem .38rem">‹</button>
+        <span id="dcWeekLbl" style="font-size:.72rem;color:var(--txt);white-space:nowrap"></span>
+        <button class="srch-pin" onclick="_dcWeekNav(1)" style="padding:.18rem .38rem">›</button>
+      </div>
       <button class="srch-pin" id="dcPin" onclick="_togglePin('dc')" title="Manter filtro ao mudar de mês">📌</button>
       <button class="srch-clr" onclick="DC_SEARCH='';DC_CARD='all';document.getElementById('dcSearch').value='';DC_PG=1;renderDespesas()" title="Limpar filtros">✕</button>
     </div>
@@ -740,6 +745,11 @@ tr.swipe-del{background:rgba(255,84,112,.28)!important;transition:background .15
       <span class="slbl" style="margin:0">⚡ Carga Elétrica</span>
       <div class="row g2">
         <button class="srch-pin" id="vehWeekBtn" onclick="toggleVehWeek()" title="Semana actual (Seg–Dom)">📅 Sem</button>
+        <div id="vehWeekNav" style="display:none;align-items:center;gap:.18rem">
+          <button class="srch-pin" onclick="_vehWeekNav(-1)" style="padding:.18rem .38rem">‹</button>
+          <span id="vehWeekLbl" style="font-size:.72rem;color:var(--txt);white-space:nowrap"></span>
+          <button class="srch-pin" onclick="_vehWeekNav(1)" style="padding:.18rem .38rem">›</button>
+        </div>
         <button class="ic tip" id="eyeBtn_cg" data-tip="Mostrar/esconder" onclick="_toggleVis('cgCollapse','eyeBtn_cg')" style="font-size:.8rem;width:28px;height:28px"></button>
         <button class="btn pri sm" onclick="openModal('carga')">+ Adicionar</button>
       </div>
@@ -1586,11 +1596,11 @@ function clearDcRange() {
   DC_PG = 1; renderDespesas();
 }
 
-function _getWeekRange() {
+function _getWeekRange(offset) {
   var today = new Date();
   var dow = today.getDay();
   var daysFromMon = (dow === 0) ? 6 : dow - 1;
-  var mon = new Date(today); mon.setDate(today.getDate() - daysFromMon);
+  var mon = new Date(today); mon.setDate(today.getDate() - daysFromMon + ((offset||0) * 7));
   var sun = new Date(mon); sun.setDate(mon.getDate() + 6);
   var pad = function(n){ return n < 10 ? '0'+n : ''+n; };
   var iso = function(d){ return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); };
@@ -1601,7 +1611,8 @@ function _getWeekRange() {
 function toggleDcWeek() {
   DC_WEEK = !DC_WEEK;
   if (DC_WEEK) {
-    var wr = _getWeekRange();
+    _dcWeekOffset = 0;
+    var wr = _getWeekRange(0);
     DC_FROM = wr.from; DC_TO = wr.to;
     var df = document.getElementById('dcFrom'); if (df) df.value = DC_FROM;
     var dt = document.getElementById('dcTo');   if (dt) dt.value = DC_TO;
@@ -1613,8 +1624,23 @@ function toggleDcWeek() {
   DC_PG = 1; renderDespesas();
 }
 
+function _dcWeekNav(dir) {
+  _dcWeekOffset += dir;
+  var wr = _getWeekRange(_dcWeekOffset);
+  DC_FROM = wr.from; DC_TO = wr.to;
+  var df = document.getElementById('dcFrom'); if (df) df.value = DC_FROM;
+  var dt = document.getElementById('dcTo');   if (dt) dt.value = DC_TO;
+  DC_PG = 1; renderDespesas();
+}
+
 function toggleVehWeek() {
   VEH_WEEK = !VEH_WEEK;
+  if (VEH_WEEK) _vehWeekOffset = 0;
+  renderVeiculo();
+}
+
+function _vehWeekNav(dir) {
+  _vehWeekOffset += dir;
   renderVeiculo();
 }
 
@@ -1630,7 +1656,7 @@ function _syncDcInputs() {
 var globalMonth = '2026-05';
 var DC_SORT='date',DC_DIR=-1,DC_PG=1,DC_PGS=15;
 var DC_FROM=null,DC_TO=null,_dcFilterOpen=false;
-var DC_WEEK=false,VEH_WEEK=false;
+var DC_WEEK=false,VEH_WEEK=false,_dcWeekOffset=0,_vehWeekOffset=0;
 var REC_SEARCH='',REC_CARD='all',REC_PIN=false;
 var DC_SEARCH='',DC_CARD='all',DC_PIN=false;
 var CT_SORT='date',CT_DIR=-1,CT_PG=1,CT_PGS=15;
@@ -2667,6 +2693,8 @@ function renderDespesas() {
   _initSwipe('dcBody', 'dc');
   var dp=document.getElementById('dcPin'); if(dp) dp.classList.toggle('on',DC_PIN);
   var _dwb=document.getElementById('dcWeekBtn'); if(_dwb) _dwb.classList.toggle('on',DC_WEEK);
+  var _dwn=document.getElementById('dcWeekNav'); if(_dwn) _dwn.style.display=DC_WEEK?'flex':'none';
+  var _dwl=document.getElementById('dcWeekLbl'); if(_dwl&&DC_WEEK) _dwl.textContent=_getWeekRange(_dcWeekOffset).label;
   var totV = sumVal(corr.filter(function(d){return d._src==='veh';}));
   var totFat = sumVal(corr.filter(function(d){return d._src==='fat';}));
   var totAll = totM + totP + totV + totFat;
@@ -2756,9 +2784,11 @@ function renderVeiculo() {
     `<div class="kc" style="--_a:${_kpiC('veh-fix','var(--grn)')}"><div class="klbl">Fixas</div><div class="kval">${fmt(totFix)}</div></div>` +
     `<div class="kc" style="--_a:${_kpiC('veh-var','var(--blu)')}"><div class="klbl">Variáveis</div><div class="kval">${fmt(totLp)}</div></div>`;
 
-  // Semana actual (cross-month) ou mês
-  var _vehWr = VEH_WEEK ? _getWeekRange() : null;
+  // Semana (com offset de navegação) ou mês
+  var _vehWr = VEH_WEEK ? _getWeekRange(_vehWeekOffset) : null;
   var _vbtn = document.getElementById('vehWeekBtn'); if (_vbtn) _vbtn.classList.toggle('on', VEH_WEEK);
+  var _vwn = document.getElementById('vehWeekNav'); if (_vwn) _vwn.style.display = VEH_WEEK ? 'flex' : 'none';
+  var _vwl = document.getElementById('vehWeekLbl'); if (_vwl && VEH_WEEK && _vehWr) _vwl.textContent = _vehWr.label;
 
   var cg = S.veh.cg.filter(function(d){
     if (VEH_WEEK) return d.date >= _vehWr.from && d.date <= _vehWr.to;
