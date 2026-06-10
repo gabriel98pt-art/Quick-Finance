@@ -3247,6 +3247,7 @@ function openReconcileModal(card) {
 function openFatManualModal(card, ym) {
   var cur = ((S.cfg.fatManual||{})[card]||{})[ym];
   var fatCalc = sumVal(S.df.filter(function(d){return d.card===card&&isActiveForYm(d,ym);}))
+             + sumVal((S.veh.df||[]).filter(function(d){return d.card===card&&isActiveForYm(d,ym);}))
              + sumVal(S.dc.filter(function(d){return inMonth(d.date,ym)&&d.card===card&&d._src!=='fat';}))
              + _autoDebitParcVal(card, ym);
   _rcCard = card; _rcYm = ym;
@@ -3282,6 +3283,7 @@ function payFatura(card, ym) {
     if (!from) return;
   }
   var fatCalc = sumVal(S.df.filter(function(d){return d.card===card&&isActiveForYm(d,ym);}))
+             + sumVal((S.veh.df||[]).filter(function(d){return d.card===card&&isActiveForYm(d,ym);}))
              + sumVal(S.dc.filter(function(d){return inMonth(d.date,ym)&&d.card===card&&d._src!=='fat';}))
              + _autoDebitParcVal(card, ym);
   var fatManualVal = (S.cfg.fatManual||{})[card] && (S.cfg.fatManual||{})[card][ym];
@@ -4136,6 +4138,7 @@ function saveModal() {
       var o = {date:gv('f_date'),local:gv('f_local'),kwh:gf('f_kwh')||null,val:gf('f_val'),card:gv('f_card'),notes:gv('f_notes')};
       if (id!==null) {
         var existing = S.veh.cg.find(function(x){return x.id===id;});
+        if (!existing) break;
         Object.assign(existing, o);
         // Update corresponding DC entry
         var dcEntry = S.dc.find(function(x){return x._src==='veh'&&x._vid===id&&x._vtype==='carga';});
@@ -4157,6 +4160,7 @@ function saveModal() {
       var o = {date:gv('f_date'),tipo:gv('f_tipo'),val:gf('f_val'),card:gv('f_card'),notes:gv('f_notes')};
       if (id!==null) {
         var existing = S.veh.lp.find(function(x){return x.id===id;});
+        if (!existing) break;
         Object.assign(existing, o);
         var dcEntry = S.dc.find(function(x){return x._src==='veh'&&x._vid===id&&x._vtype==='limp';});
         if (dcEntry) { dcEntry.date=o.date; dcEntry.val=o.val; dcEntry.card=o.card; dcEntry.cat=o.tipo||'Veículo'; dcEntry.notes='🚘 '+(o.tipo||'Veículo'); }
