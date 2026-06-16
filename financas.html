@@ -7870,5 +7870,10 @@ function _impBankFile(bank) {
   </div>
   <button class="qsave qte" id="qSaveBtn" onclick="qSave()">GUARDAR</button>
 </div>
+<script>
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./sw.js').catch(function(){});
+}
+</script>
 </body>
 </html>
