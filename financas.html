@@ -2083,7 +2083,10 @@ function sw(id, btn) {
   for (var j = 0; j < tabs.length; j++) tabs[j].classList.remove('on');
   var panel = document.getElementById('p-' + id);
   if (panel) panel.classList.add('on');
-  if (btn) btn.classList.add('on');
+  if (btn) {
+    btn.classList.add('on');
+    btn.scrollIntoView({behavior:'smooth', block:'nearest', inline:'center'});
+  }
   window.scrollTo(0, 0);
   renderTab(id);
   updateGlobalNav();
