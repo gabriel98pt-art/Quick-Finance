@@ -447,7 +447,8 @@ code{background:var(--s2);padding:.1rem .35rem;border-radius:4px;font-size:.8em}
 .qdet input{background:none;border:none;outline:none;color:var(--txt);
             font-size:.78rem;font-weight:600;font-family:inherit;width:100%;min-width:0}
 .qdet input[type="date"]{color-scheme:dark;opacity:0;position:absolute;
-                          width:1px;height:1px;pointer-events:none}
+                          top:0;left:0;width:100%;height:100%;margin:0;padding:0;
+                          pointer-events:auto;cursor:pointer}
 .qdet input::placeholder{color:var(--mut)}
 .qsave{width:100%;padding:.92rem;border-radius:14px;border:none;font-size:1rem;
        font-weight:700;cursor:pointer;transition:opacity .12s,transform .12s,box-shadow .12s;letter-spacing:.03em;text-transform:uppercase}
@@ -7575,21 +7576,6 @@ function qCalcFrota(){
   if(a) a.value=(Math.round(total*100)/100).toFixed(2);
 }
 
-function qPickDate(){
-  var inp=document.getElementById('qDate'); if(!inp) return;
-  // Valores explícitos (não vazios) — limpar para '' não substitui o CSS
-  // .qdet input[type="date"]{position:absolute;width:1px;height:1px;pointer-events:none},
-  // que continua a aplicar-se e impede o picker nativo de fechar correctamente.
-  inp.style.position='relative'; inp.style.opacity='1';
-  inp.style.width='24px'; inp.style.height='24px'; inp.style.pointerEvents='auto';
-  var rehide=function(){
-    inp.style.position='absolute'; inp.style.opacity='0';
-    inp.style.width='1px'; inp.style.height='1px'; inp.style.pointerEvents='none';
-  };
-  inp.addEventListener('blur', rehide, {once:true});
-  inp.addEventListener('change', rehide, {once:true});
-  try{ inp.showPicker(); } catch(e){ inp.click(); }
-}
 function qOnDateChange(){
   var inp=document.getElementById('qDate');
   var lbl=document.getElementById('qDateLbl');
@@ -8065,7 +8051,7 @@ function _impBankFile(bank) {
     </div>
   </div>
   <div class="qdetail">
-    <div class="qdet" onclick="qPickDate()" style="flex:.85">
+    <div class="qdet" style="flex:.85">
       <span>📅</span><span id="qDateLbl">Hoje</span>
       <input type="date" id="qDate" onchange="qOnDateChange()">
     </div>
