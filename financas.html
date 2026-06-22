@@ -7571,14 +7571,20 @@ function _qRender() {
 }
 function qPickCat(c){ _qCat=c; _qRender(); }
 function qPickAcc(a){ _qAcc=a; _qRender(); }
+// Lê um input de texto decimal aceitando vírgula ou ponto (teclado pt-PT usa vírgula)
+function _qNumVal(id){
+  var el=document.getElementById(id);
+  var v=(el&&el.value||'').replace(',','.');
+  return parseFloat(v)||0;
+}
 function qCalcFrota(){
   var a=document.getElementById('qAmt');
   if(a && a.dataset.manual==='1') return; // já digitaste o valor final — não sobrescrever
-  var kwh=parseFloat((document.getElementById('qVehKwh')||{}).value)||0;
-  var mins=parseFloat((document.getElementById('qFrMins')||{}).value)||0;
-  var sessao=parseFloat((document.getElementById('qFrSessao')||{}).value)||0;
-  var perMin=parseFloat((document.getElementById('qFrPerMin')||{}).value)||0;
-  var perKwh=parseFloat((document.getElementById('qFrPerKwh')||{}).value)||0;
+  var kwh=_qNumVal('qVehKwh');
+  var mins=_qNumVal('qFrMins');
+  var sessao=_qNumVal('qFrSessao');
+  var perMin=_qNumVal('qFrPerMin');
+  var perKwh=_qNumVal('qFrPerKwh');
   var total=sessao+mins*perMin+kwh*perKwh;
   if(a) a.value=(Math.round(total*100)/100).toFixed(2);
 }
@@ -7623,12 +7629,11 @@ function qSave(){
         _src:'veh',_vid:vid,_vtype:'carga'});
     } else if(_qVSub==='frota'){
       var localF=((document.getElementById('qVehLocal')||{}).value||'').trim();
-      var kwhRawF=((document.getElementById('qVehKwh')||{}).value||'').replace(',','.');
-      var kwhF=parseFloat(kwhRawF)||null;
-      var minsF=parseFloat((document.getElementById('qFrMins')||{}).value)||null;
-      var sessaoF=parseFloat((document.getElementById('qFrSessao')||{}).value)||0;
-      var perMinF=parseFloat((document.getElementById('qFrPerMin')||{}).value)||0;
-      var perKwhF=parseFloat((document.getElementById('qFrPerKwh')||{}).value)||0;
+      var kwhF=_qNumVal('qVehKwh')||null;
+      var minsF=_qNumVal('qFrMins')||null;
+      var sessaoF=_qNumVal('qFrSessao');
+      var perMinF=_qNumVal('qFrPerMin');
+      var perKwhF=_qNumVal('qFrPerKwh');
       if (sessaoF||perMinF||perKwhF) { S.cfg.frotaSessao=sessaoF; S.cfg.frotaMin=perMinF; S.cfg.frotaKwh=perKwhF; }
       S.veh.cg.push({id:vid,date:date,local:localF,kwh:kwhF,val:amt,card:'Frota',notes:notes,
         frota:true,mins:minsF,frSessao:sessaoF,frPerMin:perMinF,frPerKwh:perKwhF});
