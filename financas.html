@@ -98,6 +98,11 @@ thead th.sth{cursor:pointer;user-select:none}thead th.sth:hover{color:var(--fg)}
 tbody td{padding:.55rem 1rem;border-bottom:1px solid var(--brd);font-size:.8rem}
 body.compact tbody td{padding:.22rem .6rem;font-size:.75rem}
 body.compact tfoot td{padding:.22rem .6rem}
+body.discreet .kval,body.discreet .ksub,
+body.discreet td.tred,body.discreet td.tgrn,body.discreet td.tylw,body.discreet td.tblu,body.discreet td.tpur,
+body.discreet tfoot td.tred,body.discreet tfoot td.tgrn,body.discreet tfoot td.tylw,body.discreet tfoot td.tblu,body.discreet tfoot td.tpur,
+body.discreet #ctBody td:nth-child(4),body.discreet #ctBody td:nth-child(5),
+body.discreet #dBudget,body.discreet #dSav,body.discreet #dMiniAnnual,body.discreet #dCatBreak{filter:blur(5px);user-select:none;transition:filter var(--tr)}
 tbody tr:last-child td{border-bottom:none}
 tbody tr:nth-child(even){background:rgba(128,128,255,.03)}
 tbody tr:hover{background:rgba(77,143,255,.06)!important}
@@ -560,6 +565,7 @@ tr.swipe-del{background:rgba(255,84,112,.28)!important;transition:background .15
         <button class="hdr-more-item" onclick="exportPDF();_hdrMoreClose()">🖨 <span style="color:var(--mut);font-size:.72rem">Exportar PDF</span></button>
         <div style="height:1px;background:var(--brd);margin:.2rem 0"></div>
         <button class="hdr-more-item" id="compactMenuItem" onclick="toggleCompact();_hdrMoreClose()"></button>
+        <button class="hdr-more-item" id="discreetMenuItem" onclick="toggleDiscreet();_hdrMoreClose()"></button>
         <button class="hdr-more-item" id="themeMenuItem" onclick="toggleTheme();_hdrMoreClose()"></button>
       </div>
     </div>
@@ -655,8 +661,12 @@ tr.swipe-del{background:rgba(255,84,112,.28)!important;transition:background .15
   <div class="tc">
     <div class="tch">
       <span class="slbl" style="margin:0">📋 Registos</span>
-      <button class="btn pri sm" onclick="openModal('receita')">+ Adicionar</button>
+      <div class="row g2">
+        <button class="ic tip" id="eyeBtn_rec" data-tip="Mostrar/esconder" onclick="_toggleVis('recCollapse','eyeBtn_rec')" style="font-size:.8rem;width:28px;height:28px"></button>
+        <button class="btn pri sm" onclick="openModal('receita')">+ Adicionar</button>
+      </div>
     </div>
+    <div id="recCollapse">
     <div class="srch-bar">
       <input id="recSearch" type="search" placeholder="🔍 Pesquisar…" oninput="REC_SEARCH=this.value;renderReceitas()" value="">
       <select id="recSrcFilt" onchange="renderReceitas()"><option value="all">Todas as fontes</option></select>
@@ -668,6 +678,7 @@ tr.swipe-del{background:rgba(255,84,112,.28)!important;transition:background .15
       <thead><tr><th>Data</th><th>Fonte</th><th>Valor</th><th>Conta</th><th>Notas</th><th></th></tr></thead>
       <tbody id="rBody" class="anim"></tbody><tfoot id="rFoot"></tfoot>
     </table></div>
+    </div>
   </div>
 </div>
 
@@ -686,10 +697,18 @@ tr.swipe-del{background:rgba(255,84,112,.28)!important;transition:background .15
         <button class="btn pri sm" onclick="openModal('dfixa')">+ Adicionar</button>
       </div>
     </div>
-    <div id="dfCollapse"><div class="tw"><table>
+    <div id="dfCollapse">
+    <div class="srch-bar">
+      <input id="dfSearch" type="search" placeholder="🔍 Pesquisar…" oninput="DF_SEARCH=this.value;renderDespesas()" value="">
+      <select id="dfCatFilt" onchange="DF_CAT=this.value;renderDespesas()"><option value="">Todas as categorias</option></select>
+      <select id="dfCardFilt" onchange="DF_CARD=this.value;renderDespesas()"><option value="all">Todos os cartões</option></select>
+      <button class="srch-clr" onclick="DF_SEARCH='';DF_CARD='all';DF_CAT='';document.getElementById('dfSearch').value='';renderDespesas()" title="Limpar filtros">✕</button>
+    </div>
+    <div class="tw"><table>
       <thead><tr><th>Nome</th><th>Categoria</th><th>Valor</th><th title="Dia de vencimento mensal">Dia Venc.</th><th>Cartão</th><th title="Marque quando pago — não reinicia a cada mês">Pago?</th><th>Notas</th><th></th></tr></thead>
       <tbody id="dfBody" class="anim"></tbody><tfoot id="dfFoot"></tfoot>
-    </table></div></div>
+    </table></div>
+    </div>
   </div>
   <div class="tc mb2">
     <div class="tch">
@@ -707,6 +726,12 @@ tr.swipe-del{background:rgba(255,84,112,.28)!important;transition:background .15
     <div class="srch-bar">
       <input id="dcSearch" type="search" placeholder="🔍 Pesquisar…" oninput="DC_SEARCH=this.value;DC_PG=1;renderDespesas()" value="">
       <select id="dcCardFilt" onchange="DC_CARD=this.value;DC_PG=1;renderDespesas()"><option value="all">Todos os cartões</option></select>
+      <select id="dcSrcFilt" onchange="DC_SRC=this.value;DC_PG=1;renderDespesas()" title="Veículo não aparece aqui — ver aba Veículo">
+        <option value="all">Toda a origem</option>
+        <option value="man">Manual</option>
+        <option value="parc">Parcela</option>
+        <option value="fat">Cartão de Crédito</option>
+      </select>
       <button class="srch-pin" id="dcWeekBtn" onclick="toggleDcWeek()" title="Semana actual (Seg–Dom)">📅 Sem</button>
       <div id="dcWeekNav" style="display:none;align-items:center;gap:.18rem">
         <button class="srch-pin" onclick="_dcWeekNav(-1)" style="padding:.18rem .38rem">‹</button>
@@ -748,9 +773,12 @@ tr.swipe-del{background:rgba(255,84,112,.28)!important;transition:background .15
   <div class="tc mb2">
     <div class="tch">
       <span class="slbl" style="margin:0">🛣️ Km &amp; Tempo</span>
-      <button class="btn pri sm" onclick="openModal('vehkm')">+ Adicionar</button>
+      <div class="row g2">
+        <button class="ic tip" id="eyeBtn_km" data-tip="Mostrar/esconder" onclick="_toggleVis('kmCollapse','eyeBtn_km')" style="font-size:.8rem;width:28px;height:28px"></button>
+        <button class="btn pri sm" onclick="openModal('vehkm')">+ Adicionar</button>
+      </div>
     </div>
-    <div id="kmBody" style="padding:.6rem .9rem"></div>
+    <div id="kmCollapse"><div id="kmBody" style="padding:.6rem .9rem"></div></div>
   </div>
 
   <div class="tc mb2">
@@ -767,10 +795,20 @@ tr.swipe-del{background:rgba(255,84,112,.28)!important;transition:background .15
         <button class="btn pri sm" onclick="openModal('carga')">+ Adicionar</button>
       </div>
     </div>
-    <div id="cgCollapse"><div class="tw"><table>
+    <div id="cgCollapse">
+    <div class="srch-bar">
+      <select id="cgCardFilt" onchange="CG_CARD=this.value;renderVeiculo()"><option value="all">Todos os cartões</option></select>
+      <select id="cgFrotaFilt" onchange="CG_FROTA=this.value;renderVeiculo()">
+        <option value="all">Todas as cargas</option>
+        <option value="frota">🚗 Só frota</option>
+        <option value="normal">Só normais</option>
+      </select>
+    </div>
+    <div class="tw"><table>
       <thead><tr><th>Data</th><th>Local</th><th>kWh</th><th>Valor</th><th>Cartão</th><th>Notas</th><th></th></tr></thead>
       <tbody id="cgBody" class="anim"></tbody><tfoot id="cgFoot"></tfoot>
-    </table></div></div>
+    </table></div>
+    </div>
   </div>
 
   <div class="tc mb2">
@@ -781,10 +819,16 @@ tr.swipe-del{background:rgba(255,84,112,.28)!important;transition:background .15
         <button class="btn pri sm" onclick="openModal('limp')">+ Adicionar</button>
       </div>
     </div>
-    <div id="lpCollapse"><div class="tw"><table>
+    <div id="lpCollapse">
+    <div class="srch-bar">
+      <select id="lpTipoFilt" onchange="LP_TIPO=this.value;renderVeiculo()"><option value="all">Todas as categorias</option></select>
+      <select id="lpCardFilt" onchange="LP_CARD=this.value;renderVeiculo()"><option value="all">Todos os cartões</option></select>
+    </div>
+    <div class="tw"><table>
       <thead><tr><th>Data</th><th>Categoria</th><th>Valor</th><th>Cartão</th><th>Notas</th><th></th></tr></thead>
       <tbody id="lpBody" class="anim"></tbody><tfoot id="lpFoot"></tfoot>
-    </table></div></div>
+    </table></div>
+    </div>
   </div>
 
   <div class="tc mb2">
@@ -795,10 +839,16 @@ tr.swipe-del{background:rgba(255,84,112,.28)!important;transition:background .15
         <button class="btn pri sm" onclick="openModal('vehfix')">+ Adicionar</button>
       </div>
     </div>
-    <div id="vehDfCollapse"><div class="tw"><table>
+    <div id="vehDfCollapse">
+    <div class="srch-bar">
+      <select id="vehDfCatFilt" onchange="VEHDF_CAT=this.value;renderVeiculo()"><option value="">Todas as categorias</option></select>
+      <select id="vehDfCardFilt" onchange="VEHDF_CARD=this.value;renderVeiculo()"><option value="all">Todos os cartões</option></select>
+    </div>
+    <div class="tw"><table>
       <thead><tr><th>Nome</th><th>Categoria</th><th>Valor/mês</th><th>Dia</th><th>Cartão</th><th>Notas</th><th></th></tr></thead>
       <tbody id="vehDfBody"></tbody><tfoot id="vehDfFoot"></tfoot>
-    </table></div></div>
+    </table></div>
+    </div>
   </div>
 
   <div class="tc">
@@ -827,7 +877,13 @@ tr.swipe-del{background:rgba(255,84,112,.28)!important;transition:background .15
         <button class="btn pri sm" onclick="openModal('parc')">+ Adicionar</button>
       </div>
     </div>
-    <div id="parcContent" style="padding:1rem"></div>
+    <div id="parcContent">
+      <div class="srch-bar">
+        <select id="parcCatFilt" onchange="PARC_CAT=this.value;renderParcelas()"><option value="">Todas as categorias</option></select>
+        <select id="parcCardFilt" onchange="PARC_CARD=this.value;renderParcelas()"><option value="all">Todos os cartões</option></select>
+      </div>
+      <div id="parcGrid" style="padding:1rem"></div>
+    </div>
   </div>
 </div>
 
@@ -1579,7 +1635,9 @@ var _VIS_SECTIONS = [
   ['lpCollapse','eyeBtn_lp'],
   ['vehDfCollapse','eyeBtn_vehDf'],
   ['vehDcCollapse','eyeBtn_vehDc'],
-  ['parcContent','eyeBtn_parc']
+  ['parcContent','eyeBtn_parc'],
+  ['kmCollapse','eyeBtn_km'],
+  ['recCollapse','eyeBtn_rec']
 ];
 function _applyAllVis() {
   _VIS_SECTIONS.forEach(function(p){ _applyVis(p[0], p[1]); });
@@ -1773,7 +1831,12 @@ var DC_SORT='date',DC_DIR=-1,DC_PG=1,DC_PGS=15;
 var DC_FROM=null,DC_TO=null,_dcFilterOpen=false;
 var DC_WEEK=false,VEH_WEEK=false,_dcWeekOffset=0,_vehWeekOffset=0;
 var REC_SEARCH='',REC_CARD='all',REC_PIN=false;
-var DC_SEARCH='',DC_CARD='all',DC_CAT='',DC_PIN=false;
+var DC_SEARCH='',DC_CARD='all',DC_CAT='',DC_PIN=false,DC_SRC='all';
+var DF_SEARCH='',DF_CARD='all',DF_CAT='';
+var CG_CARD='all',CG_FROTA='all';
+var LP_CARD='all',LP_TIPO='all';
+var VEHDF_CARD='all',VEHDF_CAT='';
+var PARC_CAT='',PARC_CARD='all';
 var CT_SORT='date',CT_DIR=-1,CT_PG=1,CT_PGS=15;
 
 // ================================================================
@@ -2669,6 +2732,7 @@ function renderReceitas() {
   var rp=document.getElementById('recPin'); if(rp) rp.classList.toggle('on',REC_PIN);
   var ft = document.getElementById('rFoot');
   if (ft) ft.innerHTML = `<tr><td colspan="2">Total ${monthLabel(globalMonth)}</td><td class="tgrn">${fmt(tot)}</td><td colspan="3"></td></tr>`;
+  _applyAllVis();
 }
 
 // ================================================================
@@ -2731,8 +2795,31 @@ function renderDespesas() {
     }
   }
 
-  // Fixas
-  _setAnimBody('dfBody', (function() { return S.df.length ? S.df.map(function(d) {
+  // Fixas — popular filtros
+  var dfCatFiltEl = document.getElementById('dfCatFilt');
+  if (dfCatFiltEl) {
+    var dfCats = {}; S.df.forEach(function(d){ if(d.cat) dfCats[d.cat]=1; });
+    var curDfCat = DF_CAT;
+    dfCatFiltEl.innerHTML = '<option value="">Todas as categorias</option>' +
+      Object.keys(dfCats).map(function(c){ return '<option value="'+_esc(c)+'"'+(c===curDfCat?' selected':'')+'>'+_esc(c)+'</option>'; }).join('');
+    if (DF_CAT && !dfCats[DF_CAT]) DF_CAT = '';
+  }
+  var dfCardFiltEl = document.getElementById('dfCardFilt');
+  if (dfCardFiltEl) {
+    var dfCards = {}; S.df.forEach(function(d){ if(d.card) dfCards[d.card]=1; });
+    var curDfCard = DF_CARD;
+    dfCardFiltEl.innerHTML = '<option value="all">Todos os cartões</option>' +
+      Object.keys(dfCards).map(function(c){ return '<option value="'+_esc(c)+'"'+(c===curDfCard?' selected':'')+'>'+_esc(c)+'</option>'; }).join('');
+    if (DF_CARD!=='all' && !dfCards[DF_CARD]) DF_CARD = 'all';
+  }
+  var _dfq = DF_SEARCH.toLowerCase();
+  var dfList = S.df.filter(function(d){
+    if (DF_CAT && d.cat !== DF_CAT) return false;
+    if (DF_CARD !== 'all' && d.card !== DF_CARD) return false;
+    if (_dfq && !((d.name||'').toLowerCase().includes(_dfq) || (d.cat||'').toLowerCase().includes(_dfq) || (d.notes||'').toLowerCase().includes(_dfq) || (d.card||'').toLowerCase().includes(_dfq))) return false;
+    return true;
+  });
+  _setAnimBody('dfBody', (function() { return dfList.length ? dfList.map(function(d) {
     var inactive = !isActiveForYm(d, ym);
     var dy = inactive ? 999 : daysUntil(d.day);
     var _paid = isPaidInYm(d, ym);
@@ -2746,7 +2833,8 @@ function renderDespesas() {
     return `<tr style="${_rs}" data-cc="${_dcc}"><td style="${urg};font-weight:${urg?700:400}">${_esc(d.name)}${inactBadge}${autoBadge}</td><td>${catBadge('fcat',d.cat)}</td><td class="bold">${inactive?'<span style="color:var(--mut)">'+fmt(d.val)+'</span>':fmt(d.val)}</td><td style="${urg}">${d.day||'—'}</td><td>${_esc(d.card||'—')}</td><td><input type="checkbox" ${_paid?'checked':''} ${chkDisabled} onchange="togglePaid(${d.id},this.checked,'${ym}')"></td><td>${_esc(d.notes||'—')}</td><td><div class="ac"><button class="ic e" onclick="openModal('dfixa',${d.id})">✏</button><button class="ic d" onclick="delRec('df',${d.id})">🗑</button></div></td></tr>`;
   }).join('') : _emptyRow(8,'↘','Nenhuma despesa fixa','Adiciona despesas recorrentes como renda, subscrições, etc.'); })());
   var ft = document.getElementById('dfFoot');
-  if (ft) ft.innerHTML = `<tr><td colspan="2">Total</td><td class="tred">${fmt(totFixas(ym))}</td><td colspan="5"></td></tr>`;
+  var _dfTotFiltered = sumVal(dfList.filter(function(d){ return isActiveForYm(d, ym); }));
+  if (ft) ft.innerHTML = `<tr><td colspan="2">Total</td><td class="tred">${fmt(_dfTotFiltered)}</td><td colspan="5"></td></tr>`;
 
   // Card filter populate
   var dcCardFiltEl = document.getElementById('dcCardFilt');
@@ -2771,6 +2859,10 @@ function renderDespesas() {
     }
     if (_dcq && !((d.name||'').toLowerCase().includes(_dcq) || (d.cat||'').toLowerCase().includes(_dcq) || (d.notes||'').toLowerCase().includes(_dcq) || (d.card||'').toLowerCase().includes(_dcq))) return false;
     if (DC_CAT && d.cat !== DC_CAT) return false;
+    if (DC_SRC !== 'all') {
+      var _srcKey = d._src === 'parc' ? 'parc' : d._src === 'veh' ? 'veh' : d._src === 'fat' ? 'fat' : 'man';
+      if (_srcKey !== DC_SRC) return false;
+    }
     return true;
   }).map(function(d) {
     if (d._src === 'parc' && !d.card && d._pid) {
@@ -2930,7 +3022,7 @@ function renderVeiculo() {
   var kmEl = document.getElementById('kmBody');
   if (kmEl) {
     if (!kmMonthRows.length) {
-      kmEl.innerHTML = `<div class="tmut" style="font-size:.78rem">Sem registos em ${monthLabel(ym)} — usa o botão + para adicionar a semana atual.</div>`;
+      kmEl.innerHTML = _emptyDiv('🛣️', 'Sem registos em '+monthLabel(ym), 'Usa o botão + para adicionar a semana atual.');
     } else {
       var totKmM = kmMonthRows.reduce(function(s,d){ return s+(d.km||0); }, 0);
       var totMinsM = kmMonthRows.reduce(function(s,d){ return s+(d.h||0)*60+(d.m||0); }, 0);
@@ -2965,9 +3057,21 @@ function renderVeiculo() {
   var _vwn = document.getElementById('vehWeekNav'); if (_vwn) _vwn.style.display = VEH_WEEK ? 'flex' : 'none';
   var _vwl = document.getElementById('vehWeekLbl'); if (_vwl && VEH_WEEK && _vehWr) _vwl.textContent = _vehWr.label;
 
+  var cgCardFiltEl = document.getElementById('cgCardFilt');
+  if (cgCardFiltEl) {
+    var cgCards = {}; S.veh.cg.forEach(function(d){ if(d.card) cgCards[d.card]=1; });
+    var curCgCard = CG_CARD;
+    cgCardFiltEl.innerHTML = '<option value="all">Todos os cartões</option>' +
+      Object.keys(cgCards).map(function(c){ return '<option value="'+_esc(c)+'"'+(c===curCgCard?' selected':'')+'>'+_esc(c)+'</option>'; }).join('');
+    if (CG_CARD!=='all' && !cgCards[CG_CARD]) CG_CARD = 'all';
+  }
   var cg = S.veh.cg.filter(function(d){
-    if (VEH_WEEK) return d.date >= _vehWr.from && d.date <= _vehWr.to;
-    return inMonth(d.date, ym);
+    if (VEH_WEEK) { if (!(d.date >= _vehWr.from && d.date <= _vehWr.to)) return false; }
+    else { if (!inMonth(d.date, ym)) return false; }
+    if (CG_CARD !== 'all' && d.card !== CG_CARD) return false;
+    if (CG_FROTA === 'frota' && !d.frota) return false;
+    if (CG_FROTA === 'normal' && d.frota) return false;
+    return true;
   }).sort(function(a,b){return b.date>a.date?1:-1;});
   var _cgPeriodLbl = VEH_WEEK ? ('Semana ' + _vehWr.label) : monthLabel(ym);
   var _cgTotWeek = sumVal(cg);
@@ -2978,33 +3082,73 @@ function renderVeiculo() {
   var cgFt = document.getElementById('cgFoot');
   if (cgFt) cgFt.innerHTML = `<tr><td colspan="3">Total ${_cgPeriodLbl}</td><td class="tylw">${fmt(_cgTotWeek)}</td><td colspan="3"></td></tr>`;
 
+  var lpTipoFiltEl = document.getElementById('lpTipoFilt');
+  if (lpTipoFiltEl) {
+    var lpTipos = {}; S.veh.lp.forEach(function(d){ if(d.tipo) lpTipos[d.tipo]=1; });
+    var curLpTipo = LP_TIPO;
+    lpTipoFiltEl.innerHTML = '<option value="all">Todas as categorias</option>' +
+      Object.keys(lpTipos).map(function(t){ return '<option value="'+_esc(t)+'"'+(t===curLpTipo?' selected':'')+'>'+_esc(t)+'</option>'; }).join('');
+    if (LP_TIPO!=='all' && !lpTipos[LP_TIPO]) LP_TIPO = 'all';
+  }
+  var lpCardFiltEl = document.getElementById('lpCardFilt');
+  if (lpCardFiltEl) {
+    var lpCards = {}; S.veh.lp.forEach(function(d){ if(d.card) lpCards[d.card]=1; });
+    var curLpCard = LP_CARD;
+    lpCardFiltEl.innerHTML = '<option value="all">Todos os cartões</option>' +
+      Object.keys(lpCards).map(function(c){ return '<option value="'+_esc(c)+'"'+(c===curLpCard?' selected':'')+'>'+_esc(c)+'</option>'; }).join('');
+    if (LP_CARD!=='all' && !lpCards[LP_CARD]) LP_CARD = 'all';
+  }
   var lp = S.veh.lp.filter(function(d){
-    if (VEH_WEEK) return d.date >= _vehWr.from && d.date <= _vehWr.to;
-    return inMonth(d.date, ym);
+    if (VEH_WEEK) { if (!(d.date >= _vehWr.from && d.date <= _vehWr.to)) return false; }
+    else { if (!inMonth(d.date, ym)) return false; }
+    if (LP_TIPO !== 'all' && d.tipo !== LP_TIPO) return false;
+    if (LP_CARD !== 'all' && d.card !== LP_CARD) return false;
+    return true;
   }).sort(function(a,b){return b.date>a.date?1:-1;});
   var _lpPeriodLbl = VEH_WEEK ? ('Semana ' + _vehWr.label) : monthLabel(ym);
   var _lpTotWeek = sumVal(lp);
   var lpEl = document.getElementById('lpBody');
   if (lpEl) lpEl.innerHTML = lp.length ? lp.map(function(d) {
-    return `<tr><td title="${fmtDate(d.date)}">${fmtDateShort(d.date)}</td><td>${d.tipo||'—'}</td><td class="bold">${fmt(d.val)}</td><td>${d.card||'—'}</td><td>${d.notes||'—'}</td><td><div class="ac"><button class="ic e" onclick="openModal('limp',${d.id})">✏</button><button class="ic d" onclick="delRec('lp',${d.id})">🗑</button></div></td></tr>`;
+    return `<tr><td title="${fmtDate(d.date)}">${fmtDateShort(d.date)}</td><td>${d.tipo||'—'}</td><td class="tylw bold">${fmt(d.val)}</td><td>${d.card||'—'}</td><td>${d.notes||'—'}</td><td><div class="ac"><button class="ic e" onclick="openModal('limp',${d.id})">✏</button><button class="ic d" onclick="delRec('lp',${d.id})">🗑</button></div></td></tr>`;
   }).join('') : _emptyRow(6,'🧼', VEH_WEEK ? 'Nenhuma despesa esta semana' : 'Nenhuma limpeza em '+monthLabel(ym),'Regista lavagens e manutenções com o botão +');
   var lpFt = document.getElementById('lpFoot');
-  if (lpFt) lpFt.innerHTML = `<tr><td colspan="2">Total ${_lpPeriodLbl}</td><td>${fmt(_lpTotWeek)}</td><td colspan="3"></td></tr>`;
+  if (lpFt) lpFt.innerHTML = `<tr><td colspan="2">Total ${_lpPeriodLbl}</td><td class="tylw">${fmt(_lpTotWeek)}</td><td colspan="3"></td></tr>`;
 
   // Fixed vehicle expenses
-  var vdf = (S.veh.df||[]).slice().sort(function(a,b){return (a.name||'').localeCompare(b.name||'');});
+  var vehDfCatFiltEl = document.getElementById('vehDfCatFilt');
+  if (vehDfCatFiltEl) {
+    var vehDfCats = {}; (S.veh.df||[]).forEach(function(d){ if(d.cat) vehDfCats[d.cat]=1; });
+    var curVehDfCat = VEHDF_CAT;
+    vehDfCatFiltEl.innerHTML = '<option value="">Todas as categorias</option>' +
+      Object.keys(vehDfCats).map(function(c){ return '<option value="'+_esc(c)+'"'+(c===curVehDfCat?' selected':'')+'>'+_esc(c)+'</option>'; }).join('');
+    if (VEHDF_CAT && !vehDfCats[VEHDF_CAT]) VEHDF_CAT = '';
+  }
+  var vehDfCardFiltEl = document.getElementById('vehDfCardFilt');
+  if (vehDfCardFiltEl) {
+    var vehDfCards = {}; (S.veh.df||[]).forEach(function(d){ if(d.card) vehDfCards[d.card]=1; });
+    var curVehDfCard = VEHDF_CARD;
+    vehDfCardFiltEl.innerHTML = '<option value="all">Todos os cartões</option>' +
+      Object.keys(vehDfCards).map(function(c){ return '<option value="'+_esc(c)+'"'+(c===curVehDfCard?' selected':'')+'>'+_esc(c)+'</option>'; }).join('');
+    if (VEHDF_CARD!=='all' && !vehDfCards[VEHDF_CARD]) VEHDF_CARD = 'all';
+  }
+  var vdf = (S.veh.df||[]).filter(function(d){
+    if (VEHDF_CAT && d.cat !== VEHDF_CAT) return false;
+    if (VEHDF_CARD !== 'all' && d.card !== VEHDF_CARD) return false;
+    return true;
+  }).sort(function(a,b){return (a.name||'').localeCompare(b.name||'');});
   var vDfEl = document.getElementById('vehDfBody');
   if (vDfEl) vDfEl.innerHTML = vdf.length ? vdf.map(function(d) {
-    return `<tr><td>${d.name||'—'}</td><td>${d.cat||'—'}</td><td class="tred bold">${fmt(d.val)}</td><td>${d.day||'—'}</td><td>${d.card||'—'}</td><td style="font-size:.74rem">${d.notes||'—'}</td><td><div class="ac"><button class="ic e" onclick="openModal('vehfix',${d.id})">✏</button><button class="ic d" onclick="delRec('vehdf',${d.id})">🗑</button></div></td></tr>`;
+    return `<tr><td>${d.name||'—'}</td><td>${d.cat||'—'}</td><td class="tylw bold">${fmt(d.val)}</td><td>${d.day||'—'}</td><td>${d.card||'—'}</td><td style="font-size:.74rem">${d.notes||'—'}</td><td><div class="ac"><button class="ic e" onclick="openModal('vehfix',${d.id})">✏</button><button class="ic d" onclick="delRec('vehdf',${d.id})">🗑</button></div></td></tr>`;
   }).join('') : _emptyRow(7,'📋','Sem despesas fixas do veículo','Adiciona seguros, portagens, impostos, etc.');
   var vDfFt = document.getElementById('vehDfFoot');
-  if (vDfFt) vDfFt.innerHTML = vdf.length ? `<tr><td colspan="2">Total Fixas/mês</td><td class="tred">${fmt(totFix)}</td><td colspan="4"></td></tr>` : '';
+  var _vehDfTotFiltered = sumVal(vdf.filter(function(d){ return isActiveForYm(d, ym); }));
+  if (vDfFt) vDfFt.innerHTML = vdf.length ? `<tr><td colspan="2">Total Fixas/mês</td><td class="tylw">${fmt(_vehDfTotFiltered)}</td><td colspan="4"></td></tr>` : '';
 
   // Show DC entries from vehicle
   var vehDc = S.dc.filter(function(d){return inMonth(d.date, ym)&&d._src==='veh';}).sort(function(a,b){return b.date>a.date?1:-1;});
   var vDcEl=document.getElementById('vehDcBody');
   if(vDcEl) vDcEl.innerHTML=vehDc.length?vehDc.map(function(d){
-    return `<tr class="parc-r"><td title="${fmtDate(d.date)}">${fmtDateShort(d.date)}</td><td>${catBadge('vcat',d.cat,'🚘 ')}</td><td class="tred bold">${fmt(d.val)}</td><td>${d.card||'—'}</td><td style="font-size:.74rem">${d.notes||'—'}</td></tr>`;
+    return `<tr class="parc-r"><td title="${fmtDate(d.date)}">${fmtDateShort(d.date)}</td><td>${catBadge('vcat',d.cat,'🚘 ')}</td><td class="tylw bold">${fmt(d.val)}</td><td>${d.card||'—'}</td><td style="font-size:.74rem">${d.notes||'—'}</td></tr>`;
   }).join(''):'<tr><td colspan="5"><div class="empty" style="padding:1rem"><span>Nenhum registo automático — adicione carga ou limpeza</span></div></td></tr>';
   var vDcFt=document.getElementById('vehDcFoot');
   if(vDcFt) vDcFt.innerHTML=`<tr><td colspan="2">Total Veículo em Despesas</td><td class="tylw">${fmt(totAll)}</td><td colspan="2"></td></tr>`;
@@ -3117,14 +3261,39 @@ function renderParcelas() {
   var h = '';
   if (!S.par.length) {
     h += _emptyDiv('💳','Nenhuma parcela registada','Adiciona compras a prestações com o botão +');
-    document.getElementById('parcContent').innerHTML = h;
+    document.getElementById('parcGrid').innerHTML = h;
     return;
   }
 
-  // Split into active and completed
+  // Popular filtros
+  var parcCatFiltEl = document.getElementById('parcCatFilt');
+  if (parcCatFiltEl) {
+    var parcCats = {}; S.par.forEach(function(p){ if(p.cat) parcCats[p.cat]=1; });
+    var curParcCat = PARC_CAT;
+    parcCatFiltEl.innerHTML = '<option value="">Todas as categorias</option>' +
+      Object.keys(parcCats).map(function(c){ return '<option value="'+_esc(c)+'"'+(c===curParcCat?' selected':'')+'>'+_esc(c)+'</option>'; }).join('');
+    if (PARC_CAT && !parcCats[PARC_CAT]) PARC_CAT = '';
+  }
+  var parcCardFiltEl = document.getElementById('parcCardFilt');
+  if (parcCardFiltEl) {
+    var parcCards = {}; S.par.forEach(function(p){ if(p.card) parcCards[p.card]=1; });
+    var curParcCard = PARC_CARD;
+    parcCardFiltEl.innerHTML = '<option value="all">Todos os cartões</option>' +
+      Object.keys(parcCards).map(function(c){ return '<option value="'+_esc(c)+'"'+(c===curParcCard?' selected':'')+'>'+_esc(c)+'</option>'; }).join('');
+    if (PARC_CARD!=='all' && !parcCards[PARC_CARD]) PARC_CARD = 'all';
+  }
+
+  if (!S.par.some(function(p){ return (!PARC_CAT || p.cat===PARC_CAT) && (PARC_CARD==='all' || p.card===PARC_CARD); })) {
+    document.getElementById('parcGrid').innerHTML = _emptyDiv('🔍','Nenhuma parcela com este filtro','Ajusta os filtros de categoria ou cartão');
+    return;
+  }
+
+  // Split into active and completed (mantém o índice original em S.par para o drag & drop)
   var activePar = [], donePar = [];
   for (var pi = 0; pi < S.par.length; pi++) {
     var p = S.par[pi];
+    if (PARC_CAT && p.cat !== PARC_CAT) continue;
+    if (PARC_CARD !== 'all' && p.card !== PARC_CARD) continue;
     var ms = parcMonths(p);
     if (!ms.length) continue;
     var paid = ms.filter(function(m){ return p.py[m]; }).length;
@@ -3213,7 +3382,7 @@ function renderParcelas() {
     h += '</div></div>';
   }
 
-  document.getElementById('parcContent').innerHTML = h;
+  document.getElementById('parcGrid').innerHTML = h;
   _applyAllVis();
 }
 
@@ -3494,6 +3663,7 @@ function renderCartoes() {
   var CARD_CSS  = ['var(--blu)','var(--pur)','var(--ylw)','var(--red)'];
   var CARD_RGBA = ['rgba(77,143,255,.35)','rgba(167,139,250,.35)','rgba(245,166,35,.35)','rgba(255,84,112,.35)'];
   var CARD_HEX  = ['#4d8fff','#a78bfa','#f5a623','#ff5470'];
+  var CARD_RGBA_ROW = ['rgba(77,143,255,.045)','rgba(167,139,250,.045)','rgba(245,166,35,.045)','rgba(255,84,112,.045)'];
 
   // Empty state when no cards configured
   var ctEl = document.getElementById('ctCards');
@@ -3725,7 +3895,7 @@ function renderCartoes() {
       var balTd = runBal !== null
         ? '<td style="text-align:right;color:'+(runBal>=0?'var(--grn)':'var(--red)')+';font-weight:700">'+fmt(runBal)+'</td>'
         : '<td style="text-align:right;color:var(--mut)">—</td>';
-      html += '<tr data-cc="'+ti.col+'" style="--cc:'+ti.col+'">'
+      html += '<tr data-cc="'+ti.col+'" style="--cc:'+ti.col+';background:'+CARD_RGBA_ROW[ci % CARD_RGBA_ROW.length]+'">'
         + '<td>'+fmtDate(tx.date)+'</td>'
         + '<td>'+_esc(tx.desc||'')+'</td>'
         + '<td>'+_hexToBadge(ti.col, ti.lbl)+'</td>'
@@ -6785,6 +6955,19 @@ function _updateCompactBtn() {
   if (btn) btn.innerHTML = (_compact ? '⊟' : '⊞') + ' <span style="color:var(--mut);font-size:.72rem">' + (_compact ? 'Tabela normal' : 'Tabela compacta') + '</span>';
 }
 
+var _discreet = localStorage.getItem('_discreet') === '1';
+(function(){ if (_discreet) document.body.classList.add('discreet'); })();
+function toggleDiscreet() {
+  _discreet = !_discreet;
+  document.body.classList.toggle('discreet', _discreet);
+  try { localStorage.setItem('_discreet', _discreet ? '1' : '0'); } catch(e) {}
+  _updateDiscreetBtn();
+}
+function _updateDiscreetBtn() {
+  var btn = document.getElementById('discreetMenuItem');
+  if (btn) btn.innerHTML = (_discreet ? '🙈' : '🙉') + ' <span style="color:var(--mut);font-size:.72rem">' + (_discreet ? 'Mostrar valores' : 'Modo discreto') + '</span>';
+}
+
 function _updateThemeBtn() {
   var isDark = document.documentElement.dataset.theme === 'dark';
   var btn = document.getElementById('themeBtn');
@@ -7408,6 +7591,7 @@ document.addEventListener('keydown', function(e) {
     applyColors();
     _updateThemeBtn();
     _updateCompactBtn();
+    _updateDiscreetBtn();
     _applyAllVis();
     HIST.push(JSON.stringify(S));
     HIDX = 0;
