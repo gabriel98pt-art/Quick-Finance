@@ -306,6 +306,10 @@ tbody.anim tr:nth-child(n+6){animation-delay:.14s}
 .toast.t-warn{border-left-color:var(--ylw)}
 .toast.t-info{border-left-color:var(--blu)}
 
+.upd-banner{position:fixed;top:0;left:0;right:0;background:var(--s2);border-bottom:1px solid var(--brd);padding:.6rem 1rem;font-size:.78rem;font-weight:600;z-index:2100;display:flex;align-items:center;justify-content:center;gap:.7rem;transform:translateY(-100%);transition:transform .3s cubic-bezier(.34,1.4,.64,1);box-shadow:var(--sh);text-align:center}
+.upd-banner.on{transform:translateY(0)}
+.upd-banner button{background:var(--grn);color:#06281f;border:none;border-radius:var(--r-sm);padding:.3rem .8rem;font-weight:700;font-size:.75rem;cursor:pointer;flex-shrink:0}
+
 /* INFO BOX */
 .inf{background:rgba(77,143,255,.08);border:1px solid rgba(77,143,255,.2);border-radius:10px;padding:.75rem 1rem;font-size:.78rem;margin-bottom:1rem;line-height:1.6}
 .inf strong{color:var(--blu)}
@@ -363,6 +367,7 @@ code{background:var(--s2);padding:.1rem .35rem;border-radius:4px;font-size:.8em}
 
 /* Toast: safe area iOS */
 .toast{bottom:calc(1.5rem + env(safe-area-inset-bottom,0px))}
+.upd-banner{padding-top:max(.6rem, env(safe-area-inset-top,.6rem))}
 
 /* Panel: safe area inferior */
 .pnl{padding-bottom:max(1rem, env(safe-area-inset-bottom,1rem))}
@@ -1029,6 +1034,7 @@ tr.swipe-del{background:rgba(255,84,112,.28)!important;transition:background .15
 </div>
 
 <div class="toast" id="toast"></div>
+<div class="upd-banner" id="updBanner">🔄 Nova versão disponível <button onclick="location.reload()">Atualizar</button></div>
 
 <script>
 // ================================================================
@@ -7803,6 +7809,14 @@ function _impBankFile(bank) {
 <script>
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('./sw.js').catch(function(){});
+  var _swHadController = !!navigator.serviceWorker.controller;
+  navigator.serviceWorker.addEventListener('controllerchange', function() {
+    if (_swHadController) {
+      var b = document.getElementById('updBanner');
+      if (b) b.classList.add('on');
+    }
+    _swHadController = true;
+  });
 }
 </script>
 </body>

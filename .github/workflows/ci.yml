@@ -1,0 +1,27 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Validar sintaxe do JS inline em financas.html
+        run: node .github/scripts/check-inline-js.js financas.html
+
+      - name: Validar sintaxe de sw.js
+        run: node --check sw.js
+
+      - name: Validar JSON (manifest.json)
+        run: node -e "JSON.parse(require('fs').readFileSync('manifest.json','utf8'))"
+
+      - name: Validar JSON (database.rules.json)
+        run: node -e "JSON.parse(require('fs').readFileSync('database.rules.json','utf8'))"
