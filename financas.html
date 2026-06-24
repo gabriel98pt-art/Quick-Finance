@@ -468,6 +468,11 @@ code{background:var(--s2);padding:.1rem .35rem;border-radius:4px;font-size:.8em}
                           top:0;left:0;width:100%;height:100%;margin:0;padding:0;
                           pointer-events:auto;cursor:pointer}
 .qdet input::placeholder{color:var(--mut)}
+.qdet select{background:none;border:none;outline:none;color:var(--txt);
+            font-size:.78rem;font-weight:600;font-family:inherit;width:100%;min-width:0;cursor:pointer}
+.qnewloc{background:var(--s2);border:1.5px solid var(--brd);border-radius:10px;padding:.55rem;display:flex;flex-direction:column;gap:.4rem}
+.qnewloc .qdet{background:var(--s1)}
+.qnewloc-save{padding:.55rem;border-radius:8px;border:none;font-size:.78rem;font-weight:700;cursor:pointer;background:var(--grn);color:#06281f}
 .qsave{width:100%;padding:.92rem;border-radius:14px;border:none;font-size:1rem;
        font-weight:700;cursor:pointer;transition:opacity .12s,transform .12s,box-shadow .12s;letter-spacing:.03em;text-transform:uppercase}
 .qsave:active{opacity:.85;transform:scale(.975)}
@@ -1307,7 +1312,8 @@ var DEFAULTS = {
     sgoal: 500,
     vcat: ['Limpeza','Manutenção','Combustível','Seguro Auto','Revisão','Portagens'],
     bud: {Mercado:300,Restaurante:200,'Contas de Casa':150,Saúde:100,Lazer:100},
-    bal: {'Revolut (D)':0,'AB (D)':0,'AB Gold (C)':0}
+    bal: {'Revolut (D)':0,'AB (D)':0,'AB Gold (C)':0},
+    locais: []
   },
   rec:[], df:[], dc:[], veh:{cg:[],lp:[],df:[],km:[]}, par:[], evt:[], fnds:[], trf:[], _id:10
 };
@@ -7133,12 +7139,14 @@ function qOpen() {
   var nm=document.getElementById('qName'); if(nm) nm.value='';
   var vl=document.getElementById('qVehLocal'); if(vl) vl.value='';
   var vk=document.getElementById('qVehKwh'); if(vk) vk.value='';
+  var vp=document.getElementById('qVehPreco'); if(vp) { vp.value=''; delete vp.dataset.manual; }
   var fm=document.getElementById('qFrMins'); if(fm) fm.value='';
   var fs=document.getElementById('qFrSessao'); if(fs) fs.value=moneyDisp(S.cfg.frotaSessao,2);
   var fp=document.getElementById('qFrPerMin'); if(fp) fp.value=moneyDisp(S.cfg.frotaMin,3);
   var fk=document.getElementById('qFrPerKwh'); if(fk) fk.value=moneyDisp(S.cfg.frotaKwh,3);
   var di=document.getElementById('qDate'); if(di) di.value=todayStr();
   var ll=document.getElementById('qDateLbl'); if(ll) ll.textContent='Hoje';
+  _qRenderLocais();
   _qRender();
   document.getElementById('qOv').classList.add('on');
   document.getElementById('qSh').classList.add('on');
@@ -7216,8 +7224,8 @@ function qClose() {
 })();
 // ────────────────────────────────────────────────────────────────
 
-function qType(t) { _qT=t; _qCat=''; if(t==='v') _qVSub='cg'; _qRender(); }
-function qVSub(s) { _qVSub=s; _qCat=''; var a=document.getElementById('qAmt'); if(a) delete a.dataset.manual; _qRender(); }
+function qType(t) { _qT=t; _qCat=''; if(t==='v') { _qVSub='cg'; _qRenderLocais(); } _qRender(); }
+function qVSub(s) { _qVSub=s; _qCat=''; var a=document.getElementById('qAmt'); if(a) delete a.dataset.manual; if(s==='cg') _qRenderLocais(); _qRender(); }
 
 function _qRender() {
   var isE=_qT==='e', isI=_qT==='i', isV=_qT==='v';
@@ -7287,6 +7295,10 @@ function _qRender() {
   if(vx) vx.style.display=(isCg||isFr)?'flex':'none';
   var vf=document.getElementById('qVehFrotaExtra');
   if(vf) vf.style.display=isFr?'flex':'none';
+  // Local: dropdown "Local de Recarga" na Carga, texto livre na Frota
+  var vlfr=document.getElementById('qVehLocalFrRow'); if(vlfr) vlfr.style.display=isFr?'flex':'none';
+  var vlcg=document.getElementById('qVehLocalCgWrap'); if(vlcg) vlcg.style.display=isCg?'flex':'none';
+  var vpw=document.getElementById('qVehPrecoWrap'); if(vpw) vpw.style.display=isCg?'flex':'none';
 }
 function qPickCat(c){ _qCat=c; _qRender(); }
 function qPickAcc(a){ _qAcc=a; _qRender(); }
@@ -7305,6 +7317,73 @@ function qCalcFrota(){
   var perKwh=_qNumVal('qFrPerKwh');
   var total=sessao+mins*perMin+kwh*perKwh;
   if(a) a.value=moneyDisp(total,2);
+}
+// kWh é partilhado entre Carga e Frota — despacha para o cálculo certo
+function qVehKwhInput(){
+  if(_qVSub==='frota') qCalcFrota();
+  else if(_qVSub==='cg') qCalcCarga();
+}
+
+// ── LOCAIS DE RECARGA (Carga Elétrica) ────────────────────────────
+function _qLocalOpts(selVal){
+  var locs=S.cfg.locais||[];
+  var html=locs.map(function(l){
+    var sel=String(l.id)===String(selVal);
+    return '<option value="'+l.id+'"'+(sel?' selected':'')+'>'+_esc(l.nome)+(l.rede?' — '+_esc(l.rede):'')+'</option>';
+  }).join('');
+  html+='<option value="__new__"'+(selVal==='__new__'?' selected':'')+'>+ Adicionar novo local</option>';
+  return html;
+}
+function _qRenderLocais(selVal){
+  var sel=document.getElementById('qVehLocalSel');
+  if(!sel) return;
+  var locs=S.cfg.locais||[];
+  if(selVal===undefined||selVal===null) selVal=locs.length?locs[0].id:'__new__';
+  sel.innerHTML=_qLocalOpts(selVal);
+  sel.value=String(selVal);
+  qLocalChange();
+}
+function qLocalChange(){
+  var sel=document.getElementById('qVehLocalSel');
+  var box=document.getElementById('qNewLocalBox');
+  if(!sel) return;
+  var isNew=sel.value==='__new__';
+  if(box) box.style.display=isNew?'flex':'none';
+  if(isNew){
+    var nm=document.getElementById('qNewLocalNome'); if(nm) nm.value='';
+    var rd=document.getElementById('qNewLocalRede'); if(rd) rd.value='';
+    var pr=document.getElementById('qNewLocalPreco'); if(pr) pr.value='';
+    return;
+  }
+  var loc=(S.cfg.locais||[]).find(function(l){ return String(l.id)===sel.value; });
+  var pf=document.getElementById('qVehPreco');
+  if(pf && loc) pf.value=moneyDisp(loc.preco,3);
+  qCalcCarga();
+}
+function qSaveLocal(){
+  var nome=((document.getElementById('qNewLocalNome')||{}).value||'').trim();
+  var rede=((document.getElementById('qNewLocalRede')||{}).value||'').trim();
+  var preco=_qNumVal('qNewLocalPreco');
+  if(!nome){
+    var nm=document.getElementById('qNewLocalNome');
+    if(nm){nm.focus();nm.classList.remove('shake');void nm.offsetWidth;nm.classList.add('shake');}
+    return;
+  }
+  if(!S.cfg.locais) S.cfg.locais=[];
+  var loc={id:nid(),nome:nome.slice(0,60),rede:rede.slice(0,60),preco:preco||0};
+  S.cfg.locais.push(loc);
+  saveState();
+  _qRenderLocais(loc.id);
+  showToast('✓ Local guardado — '+loc.nome);
+}
+// Valor sugerido a partir do €/kWh do local (sempre editável)
+function qCalcCarga(){
+  var a=document.getElementById('qAmt');
+  if(a && a.dataset.manual==='1') return;
+  var kwh=_qNumVal('qVehKwh');
+  var preco=_qNumVal('qVehPreco');
+  if(!kwh||!preco) return;
+  a.value=moneyDisp(kwh*preco,2);
 }
 
 function qOnDateChange(){
@@ -7325,6 +7404,19 @@ function qSave(){
     if(a){a.focus();a.classList.remove('shake');void a.offsetWidth;a.classList.add('shake');}
     return;
   }
+  // Carga: garante local de recarga selecionado — cria a partir dos campos inline se preciso
+  if(_qT==='v' && _qVSub==='cg'){
+    var _locSel=document.getElementById('qVehLocalSel');
+    if(_locSel && _locSel.value==='__new__' && ((document.getElementById('qNewLocalNome')||{}).value||'').trim()){
+      qSaveLocal();
+      _locSel=document.getElementById('qVehLocalSel');
+    }
+    if(!_locSel || !_locSel.value || _locSel.value==='__new__'){
+      var _nmEl=document.getElementById('qNewLocalNome');
+      if(_nmEl){_nmEl.focus();_nmEl.classList.remove('shake');void _nmEl.offsetWidth;_nmEl.classList.add('shake');}
+      return;
+    }
+  }
   amt=Math.round(amt*100)/100;
   var date=(document.getElementById('qDate')||{}).value||todayStr();
   if(!/^\d{4}-\d{2}-\d{2}$/.test(date)) date=todayStr();
@@ -7337,9 +7429,13 @@ function qSave(){
   } else if(_qT==='v'){
     var vid=nid();
     if(_qVSub==='cg'){
-      var local=((document.getElementById('qVehLocal')||{}).value||'').trim();
+      var locSel=document.getElementById('qVehLocalSel');
+      var locId=locSel?Number(locSel.value):null;
+      var locObj=(S.cfg.locais||[]).find(function(l){return l.id===locId;});
+      var local=locObj?locObj.nome:'';
       var kwh=moneyVal((document.getElementById('qVehKwh')||{}).value)||null;
-      S.veh.cg.push({id:vid,date:date,local:local,kwh:kwh,val:amt,card:acc,notes:notes});
+      var preco=_qNumVal('qVehPreco')||null;
+      S.veh.cg.push({id:vid,date:date,local:local,localId:locId,preco:preco,kwh:kwh,val:amt,card:acc,notes:notes});
       S.dc.push({id:nid(),date:date,cat:'Carga Elétrica',
         val:amt,card:acc,
         notes:'⚡ '+(local||'Carga Elétrica')+(kwh?' ('+kwh+' kWh)':''),
@@ -7763,14 +7859,30 @@ function _impBankFile(bank) {
     </div>
   </div>
   <div id="qVehExtra" style="display:none;gap:.45rem;margin-bottom:.9rem;flex-direction:column">
-    <div style="display:flex;gap:.45rem">
-      <div class="qdet" style="flex:2">
+    <div class="qdet" id="qVehLocalFrRow" style="display:none">
+      <span>📍</span>
+      <input type="text" id="qVehLocal" placeholder="Local / Posto..." autocomplete="off" maxlength="80">
+    </div>
+    <div id="qVehLocalCgWrap" style="display:none;flex-direction:column;gap:.45rem">
+      <div class="qdet">
         <span>📍</span>
-        <input type="text" id="qVehLocal" placeholder="Local / Posto..." autocomplete="off" maxlength="80">
+        <select id="qVehLocalSel" onchange="qLocalChange()"></select>
       </div>
+      <div id="qNewLocalBox" class="qnewloc" style="display:none">
+        <div class="qdet"><span>🏷</span><input type="text" id="qNewLocalNome" placeholder="Nome do local..." autocomplete="off" maxlength="60"></div>
+        <div class="qdet"><span>🔌</span><input type="text" id="qNewLocalRede" placeholder="Rede (opcional)..." autocomplete="off" maxlength="60"></div>
+        <div class="qdet"><span style="font-size:.65rem;color:var(--mut);font-weight:700">€/KWH</span><input type="text" id="qNewLocalPreco" inputmode="decimal" placeholder="0,000" autocomplete="off" oninput="moneyMask(event,3)"></div>
+        <button type="button" class="qnewloc-save" onclick="qSaveLocal()">Salvar local</button>
+      </div>
+    </div>
+    <div style="display:flex;gap:.45rem">
       <div class="qdet" style="flex:1">
         <span style="font-size:.7rem;color:var(--mut);font-weight:700">kWh</span>
-        <input type="text" id="qVehKwh" inputmode="decimal" placeholder="0,000" autocomplete="off" oninput="moneyMask(event,3);qCalcFrota()">
+        <input type="text" id="qVehKwh" inputmode="decimal" placeholder="0,000" autocomplete="off" oninput="moneyMask(event,3);qVehKwhInput()">
+      </div>
+      <div class="qdet" id="qVehPrecoWrap" style="flex:1;display:none">
+        <span style="font-size:.7rem;color:var(--mut);font-weight:700">€/KWH</span>
+        <input type="text" id="qVehPreco" inputmode="decimal" placeholder="0,000" autocomplete="off" oninput="moneyMask(event,3);qCalcCarga()">
       </div>
     </div>
     <div id="qVehFrotaExtra" style="display:none;gap:.45rem;flex-direction:column">
