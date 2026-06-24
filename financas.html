@@ -7448,6 +7448,21 @@ function _qFmtMin(n){
   if(!isFinite(n)||n<=0) return '';
   return String(n).replace('.',',');
 }
+// Dica dinâmica: só menciona kWh/Min se esse local de facto cobrar por isso
+function _qUpdateCgHint(active){
+  var el=document.getElementById('qCgHint');
+  if(!el) return;
+  var labels={kwh:'kWh',min:'Min',valor:'Valor'};
+  var names=active.map(function(f){return labels[f];});
+  var txt='';
+  if(names.length===3){
+    txt='💡 Preenche 2 de 3 — '+names[0]+', '+names[1]+' ou '+names[2]+' — o terceiro calcula-se sozinho';
+  } else if(names.length===2){
+    txt='💡 Preenche '+names[0]+' ou '+names[1]+' — o outro calcula-se sozinho';
+  } // 1 (só Valor, tarifa fixa por sessão) → nada para explicar, sem dica
+  el.textContent=txt;
+  el.style.display=txt?'':'none';
+}
 function qCalcCarga(){
   var kwhEl=document.getElementById('qVehKwh');
   var minEl=document.getElementById('qVehMins');
@@ -7460,9 +7475,11 @@ function qCalcCarga(){
   var min=moneyVal(minEl.value);
   var amt=moneyVal(amtEl.value);
 
-  var active=['valor'];
+  var active=[];
   if(perKwh>0) active.push('kwh');
   if(perMin>0) active.push('min');
+  active.push('valor');
+  _qUpdateCgHint(active);
   var touched=_qCgTouch.filter(function(f){return active.indexOf(f)>=0;});
   var missing=active.filter(function(f){return touched.indexOf(f)<0;});
   if(missing.length!==1) return; // 0 → nada por calcular; 2+ → ainda ambíguo, espera mais um campo
@@ -8005,7 +8022,7 @@ function _impBankFile(bank) {
           <input type="text" id="qVehPreco" inputmode="decimal" placeholder="0,000" autocomplete="off" oninput="moneyMask(event,3);qCalcCarga()">
         </div>
       </div>
-      <div class="tmut" style="font-size:.68rem">💡 Preenche 2 de 3 — kWh, Min ou Valor — o terceiro calcula-se sozinho</div>
+      <div class="tmut" id="qCgHint" style="font-size:.68rem;display:none"></div>
     </div>
     <div id="qVehFrotaExtra" style="display:none;gap:.45rem;flex-direction:column">
       <div style="display:flex;gap:.45rem">
