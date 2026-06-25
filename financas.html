@@ -3694,8 +3694,8 @@ function cardBalAtDate(card, endDate) {
   if (snap.date === '0000-01-01') return null;
   var recIn  = sumVal(S.rec.filter(function(r){ return r.card===card && r.date>snap.date && r.date<=endDate; }));
   var dcOut  = sumVal(S.dc.filter(function(d){  return d.card===card && d.date>snap.date && d.date<=endDate; }));
-  var trfIn  = sumVal((S.trf||[]).filter(function(t){ return t.to===card   && t.date>snap.date && t.date<=endDate; }));
-  var trfOut = sumVal((S.trf||[]).filter(function(t){ return t.from===card && t.date>snap.date && t.date<=endDate; }));
+  var trfIn  = sumVal((S.trf||[]).filter(function(t){ return t.to===card   && t.date>=snap.date && t.date<=endDate; }));
+  var trfOut = sumVal((S.trf||[]).filter(function(t){ return t.from===card && t.date>=snap.date && t.date<=endDate; }));
   return snap.val + recIn - dcOut + trfIn - trfOut;
 }
 
@@ -3746,8 +3746,8 @@ function openReconcileModal(card) {
     appBal = snap.val
       + sumVal(S.rec.filter(function(r){return r.card===card&&r.date>snapDate&&r.date<=today;}))
       - sumVal(S.dc.filter(function(d){return d.card===card&&d.date>snapDate&&d.date<=today;}))
-      + sumVal((S.trf||[]).filter(function(t){return t.to===card&&t.date>snapDate&&t.date<=today;}))
-      - sumVal((S.trf||[]).filter(function(t){return t.from===card&&t.date>snapDate&&t.date<=today;}));
+      + sumVal((S.trf||[]).filter(function(t){return t.to===card&&t.date>=snapDate&&t.date<=today;}))
+      - sumVal((S.trf||[]).filter(function(t){return t.from===card&&t.date>=snapDate&&t.date<=today;}));
   }
   _rcCard = card;
   mType = 'reconcile'; mId = null;
@@ -3871,8 +3871,8 @@ function renderCartoes() {
     var snapDate = snap.date;
     var allRecIn  = sumVal(S.rec.filter(function(r){return r.card===card&&r.date>snapDate&&r.date<=balDate;}));
     var allDcOut  = sumVal(S.dc.filter(function(d){return d.card===card&&d.date>snapDate&&d.date<=balDate;}));
-    var allTrfIn  = sumVal((S.trf||[]).filter(function(t){return t.to===card&&t.date>snapDate&&t.date<=balDate;}));
-    var allTrfOut = sumVal((S.trf||[]).filter(function(t){return t.from===card&&t.date>snapDate&&t.date<=balDate;}));
+    var allTrfIn  = sumVal((S.trf||[]).filter(function(t){return t.to===card&&t.date>=snapDate&&t.date<=balDate;}));
+    var allTrfOut = sumVal((S.trf||[]).filter(function(t){return t.from===card&&t.date>=snapDate&&t.date<=balDate;}));
     var acum = snapVal + allRecIn - allDcOut + allTrfIn - allTrfOut;
 
     var col      = CARD_CSS[i % CARD_CSS.length];
@@ -4888,8 +4888,8 @@ function saveModal() {
         var _rAppBal = _rsnap.val
           + sumVal(S.rec.filter(function(r){return r.card===_rcard&&r.date>_rsd&&r.date<=_today2;}))
           - sumVal(S.dc.filter(function(d){return d.card===_rcard&&d.date>_rsd&&d.date<=_today2;}))
-          + sumVal((S.trf||[]).filter(function(t){return t.to===_rcard&&t.date>_rsd&&t.date<=_today2;}))
-          - sumVal((S.trf||[]).filter(function(t){return t.from===_rcard&&t.date>_rsd&&t.date<=_today2;}));
+          + sumVal((S.trf||[]).filter(function(t){return t.to===_rcard&&t.date>=_rsd&&t.date<=_today2;}))
+          - sumVal((S.trf||[]).filter(function(t){return t.from===_rcard&&t.date>=_rsd&&t.date<=_today2;}));
         var _rdiff = parseFloat((_real - _rAppBal).toFixed(2));
         if (Math.abs(_rdiff) >= 0.01) {
           if (_rdiff > 0) S.rec.push({id:nid(),date:_today2,src:'Ajuste',val:_rdiff,card:_rcard,notes:'Reconciliação ('+fmt(_rAppBal)+' → '+fmt(_real)+')',_src:'recon'});
@@ -4897,11 +4897,14 @@ function saveModal() {
           _mToast = (_rdiff>0?'↑ +':'↓ ')+fmt(Math.abs(_rdiff))+' ajustado — saldo: '+fmt(_real);
         } else { _mToast = '✓ Saldo já correcto'; }
       } else { _mToast = '✓ Saldo inicial definido: ' + fmt(_real); }
+      var _sdTrfIn  = sumVal((S.trf||[]).filter(function(t){return t.to===_rcard&&t.date===_today2;}));
+      var _sdTrfOut = sumVal((S.trf||[]).filter(function(t){return t.from===_rcard&&t.date===_today2;}));
+      var _snapStoredVal = fromCents(toCents(_real) - toCents(_sdTrfIn) + toCents(_sdTrfOut));
       if (!S.cfg.balSnap) S.cfg.balSnap = {};
       var _rarr = S.cfg.balSnap[_rcard];
       if (!Array.isArray(_rarr)) _rarr = _rarr ? [_rarr] : [];
       var _ridx = _rarr.findIndex ? _rarr.findIndex(function(s){return s.date===_today2;}) : -1;
-      if (_ridx >= 0) { _rarr[_ridx] = {val:_real,date:_today2}; } else { _rarr.push({val:_real,date:_today2}); }
+      if (_ridx >= 0) { _rarr[_ridx] = {val:_snapStoredVal,date:_today2}; } else { _rarr.push({val:_snapStoredVal,date:_today2}); }
       S.cfg.balSnap[_rcard] = _rarr;
       globalMonth = _today2.slice(0,7); S.cfg.lastMonth = globalMonth;
       break;
