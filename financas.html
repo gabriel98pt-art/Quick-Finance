@@ -3814,7 +3814,8 @@ function payFatura(card, ym) {
   S.par.forEach(function(p) {
     if (p.card===card && p.autoDebit && parcMonths(p).indexOf(ym)>=0) p.py[ym]=true;
   });
-  globalMonth = currentYm();
+  var _pmD = new Date(ym + '-01'); _pmD.setMonth(_pmD.getMonth() + 1);
+  globalMonth = _pmD.getFullYear() + '-' + pad2(_pmD.getMonth() + 1);
   S.cfg.lastMonth = globalMonth;
   saveState(); renderCartoes(); updateGlobalNav();
   showToast('✓ Cartão de Crédito pago: '+fmt(fat)+' via '+from);
