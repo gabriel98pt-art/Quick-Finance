@@ -4922,6 +4922,22 @@ function openSettings() {
   // ── 5. Veículo ──
   h += `<div class="sg" id="sg-veiculo"><div class="sgt">🚘 Veículo</div>`;
   h += `<div class="ss"><h4>Km Mensais (para custo/km)</h4><input class="fi fiu" id="si_km" type="number" step="1" value="${S.cfg.kmMensal||0}" style="max-width:120px;margin-top:.15rem" placeholder="ex: 1500"></div>`;
+  h += `<div class="ss"><h4>Locais de Recarga</h4>`;
+  var _locs = S.cfg.locais||[];
+  if (!_locs.length) {
+    h += `<div class="tmut" style="font-size:.78rem;margin-top:.3rem">Nenhum local guardado ainda — cria um no registo rápido (➕ → Veículo → Carga → "+ Adicionar novo local").</div>`;
+  } else {
+    h += _locs.map(function(l){
+      var parts=[];
+      if (l.preco) parts.push(moneyDisp(l.preco,3)+' €/kWh');
+      if (l.perMin) parts.push(moneyDisp(l.perMin,3)+' €/min');
+      if (l.sessao) parts.push(moneyDisp(l.sessao,2)+' €/sessão');
+      var sub = parts.length ? parts.join(' · ') : 'sem tarifa definida';
+      return `<div class="srow"><span class="srow-label">${_esc(l.nome)}${l.rede?' <span class="tmut" style="font-weight:400">— '+_esc(l.rede)+'</span>':''}<br><span class="tmut" style="font-size:.68rem">${sub}</span></span>`
+        + `<span class="srow-val"><button class="ic d" onclick="removeLocal(${l.id})" title="Apagar local">🗑</button></span></div>`;
+    }).join('');
+  }
+  h += `</div>`;
   h += `</div>`;
 
   // ── 6. Cores ──
@@ -5067,6 +5083,16 @@ function removeTag(type, val) {
   S.cfg[type] = (S.cfg[type]||[]).filter(function(x){return x!==val;});
   saveState();
   openSettings();
+}
+
+// Cargas já guardadas têm a sua própria cópia de local/tarifa — apagar um Local não as afeta
+function removeLocal(id) {
+  var loc = (S.cfg.locais||[]).find(function(l){return l.id===id;});
+  if (!loc) return;
+  S.cfg.locais = S.cfg.locais.filter(function(l){return l.id!==id;});
+  saveState();
+  openSettings();
+  showToast('🗑 Local removido — '+loc.nome);
 }
 
 var _tdSrc = null, _tdType = null;
