@@ -1204,16 +1204,19 @@ function _stateWeight(s) {
 }
 
 // Guarda snapshot no localStorage antes de qualquer operação destrutiva
+// Chave própria (SK + '_sync_bk') — tem de ser diferente de SK_BK ('fin_v4_bk'), senão este
+// backup de sincronização e o backup rotativo do saveState() pisam-se um ao outro (formatos
+// incompatíveis no mesmo slot: aqui é {s,at,lbl}, no rotativo é um array de {ts,data}).
 function _fbBackup(state, label) {
   try {
-    localStorage.setItem(SK + '_bk', JSON.stringify({ s: state, at: Date.now(), lbl: label || 'auto' }));
+    localStorage.setItem(SK + '_sync_bk', JSON.stringify({ s: state, at: Date.now(), lbl: label || 'auto' }));
   } catch(e) {}
 }
 
 // Restaura o último backup automático
 function _fbRestoreBackup() {
   try {
-    var raw = localStorage.getItem(SK + '_bk');
+    var raw = localStorage.getItem(SK + '_sync_bk');
     if (!raw) { showToast('⚠ Nenhum backup automático encontrado', true); return; }
     var bk = JSON.parse(raw);
     if (!bk || !bk.s) { showToast('⚠ Backup inválido', true); return; }
@@ -1520,11 +1523,12 @@ function saveState() {
     localStorage.setItem(SK, _str);
     _fbSave(S);
     _ok = true;
-    // Rolling backup — últimas 3 versões
+    // Rolling backup — últimas 2 versões
     try {
       var _bks = JSON.parse(localStorage.getItem(SK_BK) || '[]');
+      if (!Array.isArray(_bks)) _bks = []; // auto-recupera de qualquer valor inesperado na chave
       _bks.push({ts: S._savedAt, data: _str});
-      if (_bks.length > 3) _bks = _bks.slice(-3);
+      if (_bks.length > 2) _bks = _bks.slice(-2);
       localStorage.setItem(SK_BK, JSON.stringify(_bks));
     } catch(e2) { /* silently ignore if backup fails (quota) */ }
   } catch(e) {
