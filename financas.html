@@ -3814,8 +3814,7 @@ function payFatura(card, ym) {
   S.par.forEach(function(p) {
     if (p.card===card && p.autoDebit && parcMonths(p).indexOf(ym)>=0) p.py[ym]=true;
   });
-  var _pmD = new Date(ym + '-01'); _pmD.setMonth(_pmD.getMonth() + 1);
-  globalMonth = _pmD.getFullYear() + '-' + pad2(_pmD.getMonth() + 1);
+  globalMonth = currentYm();
   S.cfg.lastMonth = globalMonth;
   saveState(); renderCartoes(); updateGlobalNav();
   showToast('✓ Cartão de Crédito pago: '+fmt(fat)+' via '+from);
@@ -3913,19 +3912,33 @@ function renderCartoes() {
       var fat = fatManual != null ? fatManual : fatCalc;
       var fatEntry = (S.cfg.fatPaid||{})[card] && (S.cfg.fatPaid||{})[card][ym];
       var isPaid   = fatEntry && fatEntry.paid;
-      var displayVal = isPaid ? fatEntry.val : fat;
+      var _kpiYm = ym, _kpiLabel = '', _kpiEditYm = ym;
+      if (isPaid) {
+        var _nextD = new Date(ym + '-01'); _nextD.setMonth(_nextD.getMonth() + 1);
+        _kpiYm = _nextD.getFullYear() + '-' + pad2(_nextD.getMonth() + 1);
+        var _nextDfM = S.df.filter(function(d){return isActiveForYm(d,_kpiYm)&&d.card===card;});
+        var _nextDcM = S.dc.filter(function(d){return inMonth(d.date,_kpiYm)&&d.card===card&&d._src!=='fat';});
+        var _nextFatCalc = sumVal(_nextDfM) + sumVal(_nextDcM) + _autoDebitParcVal(card, _kpiYm);
+        var _nextFatManual = (S.cfg.fatManual||{})[card] && (S.cfg.fatManual||{})[card][_kpiYm];
+        fat = _nextFatManual != null ? _nextFatManual : _nextFatCalc;
+        _kpiLabel = '<div class="ksub" style="color:var(--grn);font-size:.62rem">✓ ' + monthLabel(ym) + ' pago</div>';
+        _kpiEditYm = _kpiYm;
+      }
+      var safeKpiYm = _kpiYm.replace(/'/g,"\\'");
+      var displayVal = fat;
       var txCount = dcM.filter(function(d){return d.card===card&&d._src!=='fat';}).length
                   + dfM.filter(function(d){return d.card===card;}).length;
       return `<div class="kc" style="--_a:${col}">
         <div class="kc-hdr">
           <div class="klbl" style="margin:0">💳 ${card}</div>
-          <button class="ic" onclick="openFatManualModal('${safeCard}','${ym}')" title="Definir valor de fatura" style="font-size:.7rem;width:22px;height:22px">✏</button>
+          <button class="ic" onclick="openFatManualModal('${safeCard}','${safeKpiYm}')" title="Definir valor de fatura" style="font-size:.7rem;width:22px;height:22px">✏</button>
         </div>
         <div class="kval">${fmt(displayVal)}</div>
-        <div class="ksub">${isPaid?'✓ pago':'pagamento pendente'}</div>
+        ${_kpiLabel}
+        <div class="ksub">${isPaid?monthLabel(_kpiYm)+' — acumulando':'pagamento pendente'}</div>
         <div style="margin-top:.45rem;width:100%">
           ${isPaid
-            ? `<button class="btn sec sm" style="width:100%;font-size:.65rem" onclick="payFatura('${safeCard}','${ym}')">Desmarcar</button>`
+            ? `<button class="btn sec sm" style="width:100%;font-size:.65rem" onclick="payFatura('${safeCard}','${ym}')">Desmarcar ${monthLabel(ym)}</button>`
             : `<button class="btn pri sm" style="width:100%;font-size:.68rem" onclick="payFatura('${safeCard}','${ym}')">Pagar cartão de crédito</button>`
           }
         </div>
