@@ -1158,17 +1158,55 @@ function _fbMarkUnsaved(unsaved) {
   }
 }
 
+// Chaves de topo do estado — usadas para decidir o que mudou desde o último envio
+var _FB_TOPKEYS = ['rec','df','dc','par','evt','fnds','trf','veh','cfg','_id','_savedAt'];
+// Último estado confirmado como gravado no Firebase, por chave de topo (JSON em string,
+// para comparação rápida). null = ainda sem base nesta sessão (ainda não houve nenhum
+// _fbSave completo) — nesse caso _fbSaveSmart tem de cair para o _fbSave normal.
+var _fbLastSynced = null;
+
+// Grava o estado completo no Firebase (substitui tudo). É a operação "garantida" — usada
+// sempre que precisamos ter a certeza absoluta de que o Firebase fica igual ao local
+// (resolução de conflitos, sincronização manual, e fallback de qualquer retry).
 function _fbSave(s) {
   if (!_fbDb) { _fbMarkUnsaved(true); return; }
   _fbDb.ref(SK).set(s).then(function() {
     _fbMarkUnsaved(false);
     if (_fbRetryTimer) { clearTimeout(_fbRetryTimer); _fbRetryTimer = null; }
+    // .set() acabou de tornar isto a verdade completa — vira a base para os próximos envios parciais
+    _fbLastSynced = {};
+    _FB_TOPKEYS.forEach(function(k){ _fbLastSynced[k] = JSON.stringify(s[k]); });
   }).catch(function(e) {
     console.warn('[FB save]', e);
     _fbMarkUnsaved(true);
     // Retenta em 6s — garante que dados chegam ao Firebase mesmo em falhas de rede
     if (_fbRetryTimer) clearTimeout(_fbRetryTimer);
     _fbRetryTimer = setTimeout(function() { _fbSave(S); }, 6000);
+  });
+}
+
+// Grava no Firebase só as chaves de topo que mudaram desde o último envio confirmado —
+// evita reenviar todo o histórico (centenas de registos) quando só uma config pequena
+// mudou. Cai sempre para _fbSave (envio completo) se não houver base fiável ou se a
+// gravação parcial falhar — nunca arrisca dados por causa desta otimização.
+function _fbSaveSmart(s) {
+  if (!_fbDb) { _fbMarkUnsaved(true); return; }
+  if (!_fbLastSynced) { _fbSave(s); return; }
+  var partial = {}, changed = [];
+  _FB_TOPKEYS.forEach(function(k) {
+    var cur = JSON.stringify(s[k]);
+    if (cur !== _fbLastSynced[k]) { partial[k] = s[k]; changed.push(k); }
+  });
+  if (!changed.length) { _fbMarkUnsaved(false); return; }
+  _fbDb.ref(SK).update(partial).then(function() {
+    changed.forEach(function(k){ _fbLastSynced[k] = JSON.stringify(s[k]); });
+    _fbMarkUnsaved(false);
+    if (_fbRetryTimer) { clearTimeout(_fbRetryTimer); _fbRetryTimer = null; }
+  }).catch(function(e) {
+    console.warn('[FB save parcial]', e);
+    _fbMarkUnsaved(true);
+    if (_fbRetryTimer) clearTimeout(_fbRetryTimer);
+    _fbRetryTimer = setTimeout(function() { _fbSave(S); }, 6000); // retry força envio completo
   });
 }
 
@@ -1521,7 +1559,7 @@ function saveState() {
     S._savedAt = Date.now();
     var _str = JSON.stringify(S);
     localStorage.setItem(SK, _str);
-    _fbSave(S);
+    _fbSaveSmart(S);
     _ok = true;
     // Rolling backup — últimas 2 versões
     try {
